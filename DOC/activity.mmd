@@ -1,0 +1,40 @@
+flowchart TD
+  A[Início] --> B[Usuário acessa app]
+  B --> C[Efetua login?]
+  C -->|Não| D[Exibe tela de login/cadastro]
+  C -->|Sim| E[Verifica usuário.freelancer]
+
+  E -->|False| F[Perfil cliente/contratante]
+  E -->|True| G[Perfil freelancer]
+
+  subgraph Contratante
+    F1[Ver ordens abertas] --> F2[Cria ordem de serviço]
+    F2 --> F3[Define habilidades + valores]
+    F3 --> F4[Publica ordem]
+    F4 --> F5[Visualiza candidatos]
+    F5 --> F6[Seleciona freelancer]
+    F6 --> F7[Ordem em andamento]
+    F7 --> F8[Marcar concluída ou cancelar]
+    F8 --> F9[Status concluída ou cancelada]
+  end
+  F --> F1
+
+  subgraph Freelancer
+    G1[Ver ordens abertas]
+    G2[Candidatar-se a ordem]
+    G3[Cancelar candidatura]
+    G4[Selecionado - em andamento]
+    G5[Executar serviço]
+    G6[Ordem concluída]
+  end
+  G --> G1
+  G1 --> G2
+  G2 --> G3
+  G3 --> G1
+  G2 --> G4
+  G4 --> G5
+  G5 --> G6
+
+  F9 --> Z[Fim]
+  G6 --> Z
+  D --> Z
