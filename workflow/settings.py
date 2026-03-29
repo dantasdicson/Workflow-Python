@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'usuarios',
     'ordens',
+    'freelancers',
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

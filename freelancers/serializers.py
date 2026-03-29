@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Freelancer, Habilidade
+from .models import Freelancer
+from usuarios.models import Habilidade
 
 class HabilidadeSerializer(serializers.ModelSerializer):
     class Meta:

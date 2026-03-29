@@ -4,11 +4,13 @@ from django.views.generic import RedirectView
 from rest_framework.routers import DefaultRouter
 from ordens.views import OrdemDeServicoViewSet
 from usuarios.views import UsuarioViewSet, HabilidadeViewSet
+from freelancers.views import FreelancerViewSet
 
 router = DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet)
 router.register(r'habilidades', HabilidadeViewSet)
 router.register(r'ordens', OrdemDeServicoViewSet)
+router.register(r'freelancers', FreelancerViewSet)
 
 urlpatterns = [
     path('', RedirectView.as_view(url='api/', permanent=False)),

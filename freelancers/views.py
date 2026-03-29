@@ -1,7 +1,8 @@
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Freelancer, Habilidade
+from .models import Freelancer
+from usuarios.models import Habilidade
 from .serializers import FreelancerSerializer, HabilidadeSerializer
 
 class HabilidadeViewSet(viewsets.ModelViewSet):
