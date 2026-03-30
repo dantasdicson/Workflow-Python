@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter
 from ordens.views import OrdemDeServicoViewSet
 from usuarios.views import UsuarioViewSet, HabilidadeViewSet
 from freelancers.views import FreelancerViewSet
+from .views import home
 
 router = DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet)
@@ -13,7 +14,7 @@ router.register(r'ordens', OrdemDeServicoViewSet)
 router.register(r'freelancers', FreelancerViewSet)
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='api/', permanent=False)),
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls')),
