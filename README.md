@@ -28,7 +28,6 @@ python manage.py runserver
 
 ## APIs Disponíveis
 
-- `/api/freelancers/` - CRUD de Freelancers
 - `/api/habilidades/` - CRUD de Habilidades
 - `/api/ordens/` - CRUD de Ordens de Serviço
 - `/api/usuarios/` - CRUD de Usuários
