@@ -3,7 +3,7 @@ from usuarios.models import Usuario, Habilidade
 
 class OrdemDeServico(models.Model):
     STATUS_CHOICES = [
-        ('aberta', 'Aberta'),
+        ('em_aberto', 'Em Aberto'),
         ('em_andamento', 'Em Andamento'),
         ('concluida', 'Concluída'),
         ('cancelada', 'Cancelada'),
@@ -17,7 +17,7 @@ class OrdemDeServico(models.Model):
     valor_estimado_minimo = models.DecimalField(max_digits=10, decimal_places=2)
     valor_estimado_maximo = models.DecimalField(max_digits=10, decimal_places=2)
     habilidades_necessarias = models.ManyToManyField(Habilidade, related_name='ordens', blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aberta')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='em_aberto')
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_conclusao = models.DateTimeField(null=True, blank=True)
     

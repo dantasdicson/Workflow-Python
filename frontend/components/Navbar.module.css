@@ -1,0 +1,101 @@
+.navbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  padding: 1.25rem 2.5rem;
+  margin: 1.75rem;
+  position: relative;
+  width: calc(100% - 3.5rem);
+  max-width: 1400px;
+}
+
+@media (min-width: 768px) {
+  .navbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.logoArea {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logoContainer {
+  position: relative;
+  height: 3.5rem;
+  width: 3.5rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+  backdrop-filter: blur(10px);
+}
+
+.logoSvg {
+  height: 100%;
+  width: 100%;
+}
+
+.subtitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  color: #a1a1aa;
+  margin: 0;
+}
+
+.projectTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.navbar nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  color: #d1d5db;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .navbar nav {
+    gap: 1.5rem;
+  }
+}
+
+.navbar a {
+  color: #d1d5db;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.navbar a:hover {
+  color: #f8fafc;
+}
+
+.loginBtn {
+  background: #18181b;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 0.875rem;
+}
+
+.loginBtn:hover {
+  background: #2a2a2e;
+}
