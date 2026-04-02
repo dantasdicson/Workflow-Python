@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
+import Menu from '../components/Menu'
 import styles from '../styles/ListarServicos.module.css'
 
 export default function ListarServicos() {
@@ -22,7 +23,10 @@ export default function ListarServicos() {
       }
 
       const data = await response.json()
-      setOrdens(data)
+
+      // Verificar se a resposta é um array ou um objeto paginado
+      const ordensData = Array.isArray(data) ? data : (data.results || [])
+      setOrdens(ordensData)
     } catch (err) {
       setError(err.message)
       console.error('Erro ao carregar ordens:', err)
@@ -34,6 +38,7 @@ export default function ListarServicos() {
   return (
     <div className={styles.container}>
       <Navbar />
+      <Menu />
       <main className={styles.main}>
         <h1 className={styles.title}>Ordens de Serviço</h1>
 
