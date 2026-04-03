@@ -68,32 +68,4 @@ export default function ListarServicos() {
       </main>
     </div>
   )
-        <h1 className={styles.title}>Ordens de Serviço</h1>
-
-        <div className={styles.content}>
-          {loading && <p>Carregando ordens de serviço...</p>}
-
-          {error && <p className={styles.error}>Erro: {error}</p>}
-
-          {!loading && !error && (
-            <div className={styles.ordensList}>
-              {ordens.length === 0 ? (
-                <p>Nenhuma ordem de serviço em aberto encontrada.</p>
-              ) : (
-                ordens.map((ordem) => (
-                  <div key={ordem.id_os} className={styles.ordemCard}>
-                    <h3>OS #{ordem.id_os}</h3>
-                    <p><strong>Descrição:</strong> {ordem.descricao_servico}</p>
-                    <p><strong>Valor estimado:</strong> R$ {ordem.valor_estimado_minimo} - R$ {ordem.valor_estimado_maximo}</p>
-                    <p><strong>Status:</strong> {ordem.status}</p>
-                    <p><strong>Data de criação:</strong> {new Date(ordem.data_criacao).toLocaleDateString('pt-BR')}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
-  )
 }

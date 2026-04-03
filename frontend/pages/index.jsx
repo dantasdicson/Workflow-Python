@@ -1,5 +1,4 @@
 import Navbar from '../components/Navbar'
-import DashboardPanel from '../components/DashboardPanel'
 import styles from '../styles/Home.module.css'
 
 export default function Home() {
@@ -7,14 +6,47 @@ export default function Home() {
     <div className={styles.container}>
       <Navbar />
       <main className={styles.main}>
-        <div className={styles.loginAlert}>
-          <span>Realize login para poder ver serviços em aberto</span>
-        </div>
         <h1 className={styles.title}>
-          Gerencie serviços com freelancers de forma eficiente
+          Conecte-se a freelancers e contrate seu serviço com rapidez e segurança! 🧑‍💻
         </h1>
-        <DashboardPanel />
       </main>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerInner}>
+          <div className={styles.footerColumns}>
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}><span className={styles.footerIcon}>🌐</span>Redes Sociais</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Facebook <span className={styles.footerItemIcon}>📘</span></a></li>
+                <li><a href="#">Instagram <span className={styles.footerItemIcon}>📷</span></a></li>
+                <li><a href="#">WhatsApp <span className={styles.footerItemIcon}>💬</span></a></li>
+              </ul>
+            </div>
+
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}>Espaço futuro</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Item futuro 1</a></li>
+                <li><a href="#">Item futuro 2</a></li>
+                <li><a href="#">Item futuro 3</a></li>
+              </ul>
+            </div>
+
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}>Espaço futuro</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Item futuro 1</a></li>
+                <li><a href="#">Item futuro 2</a></li>
+                <li><a href="#">Item futuro 3</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className={styles.footerBottom}>
+            2026 WorkFlow. Todos os direitos reservados <span className={styles.footerRightIcon}>🔒</span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

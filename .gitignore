@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Django
+*.log
+local_settings.py
+
+# SQLite
+*.sqlite3
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Frontend (kept here as well, in addition to frontend/.gitignore)
+node_modules/
+.next/
+out/
+build/
+
+# Coverage / caches
+.coverage
+.pytest_cache/
