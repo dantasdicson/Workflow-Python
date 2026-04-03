@@ -10,7 +10,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 1.75rem auto 0 auto;
-  background: rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.08);
   border-radius: 2rem;
   box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
   backdrop-filter: blur(16px);
@@ -33,6 +33,7 @@
 .content {
   /* Espaço para a listagem das ordens de serviço */
   min-height: 400px;
+  color: rgba(248, 250, 252, 0.9);
 }
 
 .ordensList {
@@ -42,7 +43,7 @@
 }
 
 .ordemCard {
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.92);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: 1rem;
