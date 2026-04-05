@@ -1,6 +1,41 @@
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import styles from './Navbar.module.css'
 
 export default function Navbar() {
+  const router = useRouter()
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { method: 'GET' })
+        if (res.ok) {
+          const data = await res.json()
+          setUser(data)
+        }
+      } catch (e) {
+        // não logado ou erro
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMe()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+      setUser(null)
+      router.push('/')
+    } catch (e) {
+      // mesmo se der erro, limpa estado local
+      setUser(null)
+      router.push('/')
+    }
+  }
+
   return (
     <header className={styles.navbar}>
       <div className={styles.logoArea}>
@@ -23,10 +58,21 @@ export default function Navbar() {
         </div>
       </div>
       <nav>
-        <a href="#about">Sobre nós</a>
-        <a href="/listarServicos">Ordens de Serviço</a>
-        <a href="#dashboard">Meu Painel</a>
-        <button className={styles.loginBtn}>Entrar</button>
+        <div className={styles.navLinks}>
+          <a href="#about">Sobre nós</a>
+          <a href="/listarServicos">Ordens de Serviço</a>
+          <a href="#dashboard">Meu Painel</a>
+        </div>
+        <div className={styles.userRow}>
+          {user && <span className={styles.welcome}>Olá, {user.nome}</span>}
+          {!loading && (
+            user ? (
+              <button className={styles.logoutBtn} onClick={handleLogout}>Sair</button>
+            ) : (
+              <a className={styles.loginBtn} href="/login">Entrar</a>
+            )
+          )}
+        </div>
       </nav>
     </header>
   )

@@ -1,24 +1,41 @@
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import Navbar from '../components/Navbar'
 import Menu from '../components/Menu'
 import styles from '../styles/ListarServicos.module.css'
+import { apiFetch } from '../lib/api'
+import { getMe } from '../lib/api'
 
 export default function ListarServicos() {
+  const router = useRouter()
   const [ordens, setOrdens] = useState([])
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    carregarOrdensAbertas()
-  }, [])
+    ;(async () => {
+      const me = await getMe()
+      if (!me) {
+        router.push('/login')
+        return
+      }
+      setUser(me)
+      carregarOrdensAbertas()
+    })()
+  }, [router])
 
   const carregarOrdensAbertas = async () => {
     try {
       setLoading(true)
-      // Buscar ordens com status 'em_aberto' (Em Aberto)
-      const response = await fetch('http://127.0.0.1:8000/api/ordens/?status=em_aberto')
+      // Buscar ordens com status 'aberta'
+      const response = await apiFetch('/api/ordens?status=aberta')
 
       if (!response.ok) {
+        if (response.status === 401) {
+          router.push('/login')
+          return
+        }
         throw new Error('Erro ao carregar ordens de serviço')
       }
 
@@ -59,6 +76,9 @@ export default function ListarServicos() {
                     <p><strong>Valor estimado:</strong> R$ {ordem.valor_estimado_minimo} - R$ {ordem.valor_estimado_maximo}</p>
                     <p><strong>Status:</strong> {ordem.status}</p>
                     <p><strong>Data de criação:</strong> {new Date(ordem.data_criacao).toLocaleDateString('pt-BR')}</p>
+                    {ordem.status === 'aberta' && user?.freelancer && (
+                      <button className={styles.candidatarBtn}>Candidatar-se</button>
+                    )}
                   </div>
                 ))
               )}
