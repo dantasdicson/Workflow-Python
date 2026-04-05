@@ -83,3 +83,20 @@
   border-radius: 0.5rem;
   border: 1px solid rgba(239, 68, 68, 0.2);
 }
+
+.candidatarBtn {
+  margin-top: 1rem;
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.candidatarBtn:hover {
+  background: #059669;
+}
