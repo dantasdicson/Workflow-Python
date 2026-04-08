@@ -232,8 +232,8 @@ Contribuições são bem-vindas! Por favor:
 4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
-## 📞 Contato
+## Contato
 
-Seu Nome - [@seu-twitter](https://twitter.com/seu-twitter) - seuemail@example.com
+**Dicson Dantas** - [WhatsApp (84) 99604-7536](https://wa.me/5584996047536) - dicsondantas@unigranrio.br
 
-Link do Projeto: [https://github.com/seu-usuario/workflow-python](https://github.com/seu-usuario/workflow-python)
+Link do Projeto: [https://github.com/dantasdicson/workflow-python](https://github.com/dantasdicson/workflow-python)
