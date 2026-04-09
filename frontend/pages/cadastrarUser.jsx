@@ -25,8 +25,8 @@ export default function CadastrarUser() {
     return d2 === nums[10]
   }
 
-  const [habilidades, setHabilidades] = useState([])
-  const [loadingHab, setLoadingHab] = useState(true)
+  const [categorias, setCategorias] = useState([])
+  const [loadingCat, setLoadingCat] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -44,43 +44,43 @@ export default function CadastrarUser() {
     whatsapp: false,
     cpf: '',
     freelancer: false,
-    habilidades_ids: [],
+    categorias_ids: [],
   })
 
   useEffect(() => {
     ;(async () => {
       try {
-        setLoadingHab(true)
-        const res = await fetch('/api/habilidades')
-        if (!res.ok) throw new Error('Erro ao carregar habilidades')
+        setLoadingCat(true)
+        const res = await fetch('/api/categorias')
+        if (!res.ok) throw new Error('Erro ao carregar categorias')
         const data = await res.json()
         const list = Array.isArray(data) ? data : (data.results || [])
-        setHabilidades(list)
+        setCategorias(list)
       } catch (e) {
         setError(e.message)
       } finally {
-        setLoadingHab(false)
+        setLoadingCat(false)
       }
     })()
   }, [])
 
-  const selectedCount = form.habilidades_ids.length
+  const selectedCount = form.categorias_ids.length
 
-  const habilidadesById = useMemo(() => {
+  const categoriasById = useMemo(() => {
     const m = new Map()
-    for (const h of habilidades) m.set(h.id, h)
+    for (const c of categorias) m.set(c.id, c)
     return m
-  }, [habilidades])
+  }, [categorias])
 
-  const toggleHabilidade = (id) => {
+  const toggleCategoria = (id) => {
     setForm((prev) => {
-      const set = new Set(prev.habilidades_ids)
+      const set = new Set(prev.categorias_ids)
       if (set.has(id)) {
         set.delete(id)
       } else {
         set.add(id)
       }
-      return { ...prev, habilidades_ids: Array.from(set) }
+      return { ...prev, categorias_ids: Array.from(set) }
     })
   }
 
@@ -90,7 +90,7 @@ export default function CadastrarUser() {
     setForm((prev) => {
       const next = { ...prev, [key]: value }
       if (key === 'freelancer' && !value) {
-        next.habilidades_ids = []
+        next.categorias_ids = []
       }
       return next
     })
@@ -110,8 +110,8 @@ export default function CadastrarUser() {
       return
     }
 
-    if (form.freelancer && form.habilidades_ids.length < 1) {
-      setError('Selecione pelo menos 1 habilidade para Freelancer.')
+    if (form.freelancer && form.categorias_ids.length < 1) {
+      setError('Selecione pelo menos 1 categoria para Freelancer.')
       return
     }
 
@@ -249,36 +249,36 @@ export default function CadastrarUser() {
                 <div />
               </div>
 
-              <div className={styles.habilidadesBlock}>
-                <div className={styles.habilidadesHeader}>
-                  <div className={styles.habilidadesTitle}>Habilidades</div>
+              <div className={styles.categoriasBlock}>
+                <div className={styles.categoriasHeader}>
+                  <div className={styles.categoriasTitle}>Categorias</div>
                   <label className={styles.labelCheckbox}>
                     <input type="checkbox" checked={form.freelancer} onChange={handleChange('freelancer')} />
                     Freelancer?
                   </label>
                   {form.freelancer && (
-                    <div className={styles.habilidadesHint}>
+                    <div className={styles.categoriasHint}>
                       Selecionadas: {selectedCount}
                     </div>
                   )}
                 </div>
 
-                {loadingHab ? (
-                  <div className={styles.helpText}>Carregando habilidades...</div>
+                {loadingCat ? (
+                  <div className={styles.helpText}>Carregando categorias...</div>
                 ) : (
-                  <div className={styles.habilidadesGrid}>
-                    {habilidades.map((h) => {
-                      const checked = form.habilidades_ids.includes(h.id)
-                      const disabled = false
+                  <div className={styles.categoriasGrid}>
+                    {categorias.map((c) => {
+                      const checked = form.categorias_ids.includes(c.id)
+                      const disabled = !form.freelancer
                       return (
-                        <label key={h.id} className={styles.habilidadeItem} data-disabled={disabled ? '1' : '0'}>
+                        <label key={c.id} className={styles.categoriaItem} data-disabled={disabled ? '1' : '0'}>
                           <input
                             type="checkbox"
                             checked={checked}
                             disabled={disabled}
-                            onChange={() => toggleHabilidade(h.id)}
+                            onChange={() => toggleCategoria(c.id)}
                           />
-                          <span className={styles.habilidadeName}>{habilidadesById.get(h.id)?.nome || h.nome}</span>
+                          <span className={styles.categoriaName}>{categoriasById.get(c.id)?.nome || c.nome}</span>
                         </label>
                       )
                     })}
@@ -287,7 +287,7 @@ export default function CadastrarUser() {
 
                 {!form.freelancer && (
                   <div className={styles.helpText}>
-                    Se você marcar Freelancer, será obrigatório selecionar pelo menos 1 habilidade.
+                    Se você marcar Freelancer, será obrigatório selecionar pelo menos 1 categoria.
                   </div>
                 )}
               </div>

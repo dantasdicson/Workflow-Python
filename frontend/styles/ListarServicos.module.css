@@ -57,11 +57,41 @@
   box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 }
 
+.ordemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
 .ordemCard h3 {
-  margin: 0 0 1rem 0;
+  margin: 0;
   color: #18181b;
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.aberta {
+  background: #10b981;
+  color: white;
+}
+
+.em_execucao {
+  background: #f59e0b;
+  color: white;
+}
+
+.concluido {
+  background: #6b7280;
+  color: white;
 }
 
 .ordemCard p {
@@ -75,6 +105,36 @@
   font-weight: 500;
 }
 
+.ordemActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.detalhesBtn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.detalhesBtn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
 .error {
   color: #ef4444;
   text-align: center;
@@ -85,18 +145,25 @@
 }
 
 .candidatarBtn {
-  margin-top: 1rem;
   background: #10b981;
   color: white;
   border: none;
-  padding: 0.625rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  flex: 1;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .candidatarBtn:hover {
   background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Usuario, Habilidade
+from .models import Usuario, Categoria
 
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
@@ -8,8 +8,8 @@ class UsuarioAdmin(admin.ModelAdmin):
     search_fields = ('login', 'nome', 'sobre_nome', 'email')
     ordering = ('-data_criacao',)
 
-@admin.register(Habilidade)
-class HabilidadeAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'descricao')
+@admin.register(Categoria)
+class CategoriaAdmin(admin.ModelAdmin):
+    list_display = ('nome',)
     search_fields = ('nome',)
     ordering = ('nome',)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Usuario, Habilidade
+from .models import Usuario, Categoria
 
 
 def _only_digits(value):
@@ -29,26 +29,26 @@ def _is_valid_cpf(value):
     return d2 == nums[10]
 
 
-class HabilidadeSerializer(serializers.ModelSerializer):
+class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Habilidade
-        fields = ['id', 'nome', 'descricao']
+        model = Categoria
+        fields = ['id', 'nome']
 
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
-    habilidades = HabilidadeSerializer(many=True, read_only=True)
-    habilidades_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Habilidade.objects.all(),
+    categorias = CategoriaSerializer(many=True, read_only=True)
+    categorias_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Categoria.objects.all(),
         many=True,
         write_only=True,
-        source='habilidades'
+        source='categorias'
     )
 
     class Meta:
         model = Usuario
         fields = ['id_usuario', 'login', 'nome', 'sobre_nome', 'email',
                   'data_nascimento', 'num_tel', 'whatsapp', 'cpf', 'freelancer',
-                  'habilidades', 'habilidades_ids', 'data_criacao', 'password']
+                  'categorias', 'categorias_ids', 'data_criacao', 'password']
         read_only_fields = ['id_usuario', 'data_criacao']
 
     def validate_cpf(self, value):
@@ -58,17 +58,17 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         freelancer = attrs.get('freelancer')
-        habilidades = attrs.get('habilidades')
+        categorias = attrs.get('categorias')
 
         if freelancer:
-            if not habilidades or len(habilidades) < 1:
-                raise serializers.ValidationError({'habilidades_ids': 'Selecione pelo menos 1 habilidade.'})
+            if not categorias or len(categorias) < 1:
+                raise serializers.ValidationError({'categorias_ids': 'Selecione pelo menos 1 categoria.'})
 
         return attrs
 
     def create(self, validated_data):
         password = validated_data.pop('password', None)
-        habilidades = validated_data.pop('habilidades', [])
+        categorias = validated_data.pop('categorias', [])
         user = Usuario(**validated_data)
 
         if password:
@@ -76,13 +76,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
         else:
             user.set_unusable_password()
         user.save()
-        if habilidades:
-            user.habilidades.set(habilidades)
+        if categorias:
+            user.categorias.set(categorias)
         return user
 
     def update(self, instance, validated_data):
         password = validated_data.pop('password', None)
-        habilidades = validated_data.pop('habilidades', None)
+        categorias = validated_data.pop('categorias', None)
 
         for attr, value in validated_data.items():
             if attr == 'cpf':
@@ -92,6 +92,6 @@ class UsuarioSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
 
-        if habilidades is not None:
-            instance.habilidades.set(habilidades)
+        if categorias is not None:
+            instance.categorias.set(categorias)
         return instance

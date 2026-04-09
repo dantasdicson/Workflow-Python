@@ -1,0 +1,334 @@
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
+import Navbar from '../components/Navbar'
+import Menu from '../components/Menu'
+import styles from '../styles/DetalhesOrdem.module.css'
+import { apiFetch } from '../lib/api'
+import { getMe } from '../lib/api'
+
+export default function DetalhesOrdem() {
+  const router = useRouter()
+  const { id } = router.query
+  const [ordem, setOrdem] = useState(null)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [candidatando, setCandidatando] = useState(false)
+  const [mensagem, setMensagem] = useState('')
+
+  useEffect(() => {
+    console.log('useEffect executado, id:', id);
+    if (!id) {
+      console.log('ID não encontrado, aguardando...');
+      return
+    }
+
+    ;(async () => {
+      const me = await getMe()
+      if (!me) {
+        console.log('Usuário não logado, redirecionando para login');
+        router.push('/login')
+        return
+      }
+      console.log('Usuário logado, carregando detalhes da ordem:', id);
+      setUser(me)
+      carregarDetalhesOrdem(id)
+    })()
+  }, [id, router])
+
+  const carregarDetalhesOrdem = async (ordemId) => {
+    try {
+      console.log('Iniciando carregamento da ordem:', ordemId);
+      setLoading(true)
+      const response = await apiFetch(`/api/ordens/${ordemId}`)
+      
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('Ordem não encontrada (404)');
+          setError('Ordem de serviço não encontrada')
+          return
+        }
+        if (response.status === 401) {
+          console.log('Não autorizado (401), redirecionando para login');
+          router.push('/login')
+          return
+        }
+        console.log('Erro na resposta:', response.status);
+        throw new Error('Erro ao carregar detalhes da ordem de serviço')
+      }
+
+      const data = await response.json()
+      console.log('Dados recebidos:', data);
+      setOrdem(data)
+    } catch (err) {
+      console.error('Erro ao carregar detalhes:', err);
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleCandidatar = async () => {
+    if (!user?.freelancer) {
+      setMensagem('Apenas freelancers podem se candidatar')
+      return
+    }
+
+    try {
+      setCandidatando(true)
+      setMensagem('')
+
+      const response = await apiFetch(`/api/ordens/${ordem.id_os}/candidatar/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        setMensagem(errorData.error || 'Erro ao se candidatar')
+        return
+      }
+
+      const data = await response.json()
+      setMensagem(data.message)
+      
+      // Redirecionar para a página da ordem após 2 segundos
+      setTimeout(() => {
+        router.push(`/detalhesOrdem?id=${ordem.id_os}`)
+      }, 2000)
+
+    } catch (err) {
+      setMensagem('Erro ao se candidatar. Tente novamente.')
+      console.error('Erro na candidatura:', err)
+    } finally {
+      setCandidatando(false)
+    }
+  }
+
+  const isCandidato = () => {
+    if (!ordem || !user) return false
+    return ordem.freelancers_candidatos?.some(candidato => candidato.id_usuario === user.id_usuario)
+  }
+
+  const isSelecionado = () => {
+    if (!ordem || !user) return false
+    return ordem.freelancer_selecionado?.id_usuario === user.id_usuario
+  }
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <Navbar />
+        <Menu />
+        <main className={styles.main}>
+          <p>Carregando detalhes da ordem de serviço...</p>
+        </main>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <Navbar />
+        <Menu />
+        <main className={styles.main}>
+          <p className={styles.error}>Erro: {error}</p>
+        </main>
+      </div>
+    )
+  }
+
+  if (!ordem) {
+    return (
+      <div className={styles.container}>
+        <Navbar />
+        <Menu />
+        <main className={styles.main}>
+          <p>Ordem de serviço não encontrada</p>
+        </main>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styles.container}>
+      <Navbar />
+      <Menu />
+      <main className={styles.main}>
+        <div className={styles.ordemHeader}>
+          <h1 className={styles.title}>Ordem de Serviço #{ordem.id_os}</h1>
+          <span className={`${styles.status} ${styles[ordem.status]}`}>
+            {ordem.status === 'aberta' ? 'Aberta' : 
+             ordem.status === 'em_execucao' ? 'Em Execução' : 'Concluída'}
+          </span>
+        </div>
+
+        <div className={styles.ordemContent}>
+          <section className={styles.section}>
+            <h2>Descrição do Serviço</h2>
+            <p>{ordem.descricao_servico}</p>
+          </section>
+
+          <section className={styles.section}>
+            <h2>Informações Detalhadas</h2>
+            <div className={styles.infoGrid}>
+              <div className={styles.infoItem}>
+                <span className={styles.label}>ID da Ordem:</span>
+                <span className={styles.value}>#{ordem.id_os}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.label}>Status:</span>
+                <span className={`${styles.statusBadge} ${styles[ordem.status]}`}>
+                  {ordem.status === 'aberta' ? 'Aberta' : 
+                   ordem.status === 'em_execucao' ? 'Em Execução' : 'Concluída'}
+                </span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.label}>Valor Estimado:</span>
+                <span className={styles.value}>
+                  R$ {parseFloat(ordem.valor_estimado_minimo).toFixed(2)} - R$ {parseFloat(ordem.valor_estimado_maximo).toFixed(2)}
+                </span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.label}>Contratante:</span>
+                <span className={styles.value}>
+                  {ordem.contratante?.nome} {ordem.contratante?.sobre_nome}
+                </span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.label}>Email do Contratante:</span>
+                <span className={styles.value}>{ordem.contratante?.email}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.label}>Data de Criação:</span>
+                <span className={styles.value}>
+                  {new Date(ordem.data_criacao).toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </span>
+              </div>
+              {ordem.data_conclusao && (
+                <div className={styles.infoItem}>
+                  <span className={styles.label}>Data de Conclusão:</span>
+                  <span className={styles.value}>
+                    {new Date(ordem.data_conclusao).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              )}
+              {ordem.freelancer_selecionado && (
+                <div className={styles.infoItem}>
+                  <span className={styles.label}>Freelancer Selecionado:</span>
+                  <span className={styles.value}>
+                    {ordem.freelancer_selecionado.nome} {ordem.freelancer_selecionado.sobre_nome}
+                  </span>
+                </div>
+              )}
+              {ordem.imagem && (
+                <div className={styles.infoItem}>
+                  <span className={styles.label}>Imagem:</span>
+                  <span className={styles.value}>
+                    <img 
+                      src={ordem.imagem} 
+                      alt="Imagem da ordem de serviço" 
+                      className={styles.ordemImage}
+                    />
+                  </span>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {ordem.categorias_necessarias && ordem.categorias_necessarias.length > 0 && (
+            <section className={styles.section}>
+              <h2>Categorias Necessárias</h2>
+              <div className={styles.categorias}>
+                {ordem.categorias_necessarias.map((categoria) => (
+                  <span key={categoria.id} className={styles.categoria}>
+                    {categoria.nome}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className={styles.section}>
+            <h2>Candidatos ({ordem.freelancers_candidatos?.length || 0}/7)</h2>
+            <div className={styles.candidatos}>
+              {ordem.freelancers_candidatos && ordem.freelancers_candidatos.length > 0 ? (
+                ordem.freelancers_candidatos.map((candidato) => (
+                  <div key={candidato.id_usuario} className={styles.candidatoCard}>
+                    <div className={styles.candidatoInfo}>
+                      <h4>{candidato.nome} {candidato.sobre_nome}</h4>
+                      <p>{candidato.email}</p>
+                      {candidato.categorias && candidato.categorias.length > 0 && (
+                        <div className={styles.candidatoCategorias}>
+                          {candidato.categorias.map((cat) => (
+                            <span key={cat.id} className={styles.categoriaPequena}>
+                              {cat.nome}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p>Nenhum candidato ainda.</p>
+              )}
+            </div>
+          </section>
+
+          {mensagem && (
+            <div className={`${styles.mensagem} ${
+              mensagem.includes('sucesso') ? styles.sucesso : styles.erro
+            }`}>
+              {mensagem}
+            </div>
+          )}
+
+          {ordem.status === 'aberta' && user?.freelancer && (
+            <div className={styles.actions}>
+              {isCandidato() ? (
+                <button className={styles.candidatadoBtn} disabled>
+                  Você já está candidatado
+                </button>
+              ) : isSelecionado() ? (
+                <button className={styles.selecionadoBtn} disabled>
+                  Você foi selecionado para esta ordem
+                </button>
+              ) : ordem.freelancers_candidatos?.length >= 7 ? (
+                <button className={styles.limiteBtn} disabled>
+                  Limite de 7 candidatos atingido
+                </button>
+              ) : (
+                <button 
+                  className={styles.candidatarBtn}
+                  onClick={handleCandidatar}
+                  disabled={candidatando}
+                >
+                  {candidatando ? 'Candidatando...' : 'Candidatar-se'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
