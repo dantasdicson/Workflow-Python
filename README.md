@@ -111,7 +111,7 @@ npm run dev
 ### ✅ Concluídas
 - [x] Autenticação JWT com refresh tokens
 - [x] CRUD de usuários (contratantes/freelancers)
-- [x] CRUD de habilidades
+- [x] CRUD de categorias
 - [x] CRUD de ordens de serviço
 - [x] Upload de imagens para ordens
 - [x] Sistema de candidatura para freelancers
@@ -143,12 +143,18 @@ npm run dev
 - `PUT /api/usuarios/{id}/` - Atualizar usuário
 - `DELETE /api/usuarios/{id}/` - Deletar usuário
 
-### Habilidades
-- `GET /api/habilidades/` - Listar habilidades
-- `POST /api/habilidades/` - Criar habilidade
-- `GET /api/habilidades/{id}/` - Detalhes da habilidade
-- `PUT /api/habilidades/{id}/` - Atualizar habilidade
-- `DELETE /api/habilidades/{id}/` - Deletar habilidade
+### Categorias
+- `GET /api/categorias/` - Listar categorias
+- `POST /api/categorias/` - Criar categoria
+- `GET /api/categorias/{id}/` - Detalhes da categoria
+- `PUT /api/categorias/{id}/` - Atualizar categoria
+- `DELETE /api/categorias/{id}/` - Deletar categoria
+
+**Categorias Padrão:**
+- DESENVOLVIMENTO WEB
+- DESENVOLVIMENTO MOBILE
+- EXCEL
+- PHOTOSHOP
 
 ### Ordens de Serviço
 - `GET /api/ordens/` - Listar ordens (suporta filtros)
