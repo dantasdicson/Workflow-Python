@@ -1,4 +1,4 @@
-# Workflow Python 🚀
+# Workflow Python 
 
 Sistema de gerenciamento de serviços freelancers com Django REST Framework e Next.js.
 
