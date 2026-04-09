@@ -1,5 +1,5 @@
 from django.db import models
-from usuarios.models import Usuario, Habilidade
+from usuarios.models import Usuario, Categoria
 
 class OrdemDeServico(models.Model):
     STATUS_CHOICES = [
@@ -15,7 +15,7 @@ class OrdemDeServico(models.Model):
     descricao_servico = models.TextField()
     valor_estimado_minimo = models.DecimalField(max_digits=10, decimal_places=2)
     valor_estimado_maximo = models.DecimalField(max_digits=10, decimal_places=2)
-    habilidades_necessarias = models.ManyToManyField(Habilidade, related_name='ordens', blank=True)
+    categorias_necessarias = models.ManyToManyField(Categoria, related_name='ordens', blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aberta')
     imagem = models.ImageField(upload_to='ordens/', null=True, blank=True)
     data_criacao = models.DateTimeField(auto_now_add=True)

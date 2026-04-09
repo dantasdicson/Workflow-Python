@@ -20,6 +20,8 @@ export default function ListarServicos() {
         router.push('/login')
         return
       }
+      console.log('Usuário logado:', me);
+      console.log('É freelancer?', me.freelancer);
       setUser(me)
       carregarOrdensAbertas()
     })()
@@ -71,14 +73,39 @@ export default function ListarServicos() {
               ) : (
                 ordens.map((ordem) => (
                   <div key={ordem.id_os} className={styles.ordemCard}>
-                    <h3>OS #{ordem.id_os}</h3>
+                    <div className={styles.ordemHeader}>
+                      <h3>OS #{ordem.id_os}</h3>
+                      <span className={`${styles.status} ${styles[ordem.status]}`}>
+                        {ordem.status === 'aberta' ? 'Aberta' : 
+                         ordem.status === 'em_execucao' ? 'Em Execução' : 'Concluída'}
+                      </span>
+                    </div>
                     <p><strong>Descrição:</strong> {ordem.descricao_servico}</p>
                     <p><strong>Valor estimado:</strong> R$ {ordem.valor_estimado_minimo} - R$ {ordem.valor_estimado_maximo}</p>
-                    <p><strong>Status:</strong> {ordem.status}</p>
                     <p><strong>Data de criação:</strong> {new Date(ordem.data_criacao).toLocaleDateString('pt-BR')}</p>
-                    {ordem.status === 'aberta' && user?.freelancer && (
-                      <button className={styles.candidatarBtn}>Candidatar-se</button>
-                    )}
+                    <p><strong>Candidatos:</strong> {ordem.freelancers_candidatos?.length || 0}/7</p>
+                    
+                    <div className={styles.ordemActions}>
+                      <button 
+                        className={styles.detalhesBtn}
+                        onClick={() => router.push(`/detalhesOrdem?id=${ordem.id_os}`)}
+                      >
+                        Ver Detalhes
+                      </button>
+                      
+                      {ordem.status === 'aberta' && user?.freelancer && (
+                        <button 
+                          className={styles.candidatarBtn}
+                          onClick={() => {
+                            console.log('Clicando em candidatar para ordem:', ordem.id_os);
+                            console.log('Usuário:', user);
+                            router.push(`/detalhesOrdem?id=${ordem.id_os}`);
+                          }}
+                        >
+                          Candidatar-se
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}

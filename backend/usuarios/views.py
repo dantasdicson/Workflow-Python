@@ -2,8 +2,8 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Usuario, Habilidade
-from .serializers import UsuarioSerializer, HabilidadeSerializer
+from .models import Usuario, Categoria
+from .serializers import UsuarioSerializer, CategoriaSerializer
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = Usuario.objects.all()
@@ -11,7 +11,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):
-        if getattr(self, 'action', None) == 'create':
+        if getattr(self, 'action', None) in {'list', 'retrieve', 'create'}:
             return [AllowAny()]
         return [IsAuthenticated()]
 
@@ -21,9 +21,9 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             return Usuario.objects.all()
         return Usuario.objects.filter(pk=user.pk)
 
-class HabilidadeViewSet(viewsets.ModelViewSet):
-    queryset = Habilidade.objects.all()
-    serializer_class = HabilidadeSerializer
+class CategoriaViewSet(viewsets.ModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
     permission_classes = [IsAuthenticated]
 
     def get_permissions(self):

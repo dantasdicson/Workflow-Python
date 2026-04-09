@@ -1,13 +1,13 @@
 from rest_framework import serializers
 from .models import OrdemDeServico
-from usuarios.models import Usuario, Habilidade
-from usuarios.serializers import UsuarioSerializer, HabilidadeSerializer
+from usuarios.models import Usuario, Categoria
+from usuarios.serializers import UsuarioSerializer, CategoriaSerializer
 
 class OrdemDeServicoSerializer(serializers.ModelSerializer):
     contratante = UsuarioSerializer(read_only=True)
     freelancer_selecionado = UsuarioSerializer(read_only=True)
     freelancers_candidatos = UsuarioSerializer(many=True, read_only=True)
-    habilidades_necessarias = HabilidadeSerializer(many=True, read_only=True)
+    categorias_necessarias = CategoriaSerializer(many=True, read_only=True)
 
     contratante_id = serializers.PrimaryKeyRelatedField(
         queryset=Usuario.objects.all(),
@@ -29,12 +29,12 @@ class OrdemDeServicoSerializer(serializers.ModelSerializer):
         source='freelancers_candidatos',
         allow_null=True
     )
-    habilidades_necessarias_ids = serializers.PrimaryKeyRelatedField(
-        queryset=Habilidade.objects.all(),
+    categorias_necessarias_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Categoria.objects.all(),
         many=True,
         write_only=True,
         required=False,
-        source='habilidades_necessarias',
+        source='categorias_necessarias',
         allow_null=True
     )
 
@@ -43,15 +43,15 @@ class OrdemDeServicoSerializer(serializers.ModelSerializer):
         fields = [
             'id_os', 'descricao_servico', 'valor_estimado_minimo', 'valor_estimado_maximo',
             'status', 'data_criacao', 'data_conclusao', 'imagem',
-            'contratante', 'freelancer_selecionado', 'freelancers_candidatos', 'habilidades_necessarias',
-            'contratante_id', 'freelancer_selecionado_id', 'freelancers_candidatos_ids', 'habilidades_necessarias_ids'
+            'contratante', 'freelancer_selecionado', 'freelancers_candidatos', 'categorias_necessarias',
+            'contratante_id', 'freelancer_selecionado_id', 'freelancers_candidatos_ids', 'categorias_necessarias_ids'
         ]
         read_only_fields = ['id_os', 'data_criacao']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from usuarios.models import Usuario, Habilidade
+        from usuarios.models import Usuario, Categoria
         self.fields['contratante_id'].queryset = Usuario.objects.all()
         self.fields['freelancer_selecionado_id'].queryset = Usuario.objects.filter(freelancer=True)
         self.fields['freelancers_candidatos_ids'].queryset = Usuario.objects.filter(freelancer=True)
-        self.fields['habilidades_necessarias_ids'].queryset = Habilidade.objects.all()
+        self.fields['categorias_necessarias_ids'].queryset = Categoria.objects.all()

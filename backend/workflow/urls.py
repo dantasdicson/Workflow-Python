@@ -6,13 +6,13 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from ordens.views import OrdemDeServicoViewSet
-from usuarios.views import UsuarioViewSet, HabilidadeViewSet
+from usuarios.views import UsuarioViewSet, CategoriaViewSet
 from usuarios.views import MeView
 from .views import home
 
 router = DefaultRouter()
 router.register(r'usuarios', UsuarioViewSet)
-router.register(r'habilidades', HabilidadeViewSet)
+router.register(r'categorias', CategoriaViewSet)
 router.register(r'ordens', OrdemDeServicoViewSet)
 
 urlpatterns = [

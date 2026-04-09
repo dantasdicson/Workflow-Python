@@ -62,9 +62,9 @@
 
 .navbar nav {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.5rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
   color: #d1d5db;
   font-size: 0.875rem;
 }
@@ -99,20 +99,23 @@
 }
 
 .loginBtn {
-  background: #18181b;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 50%, #1e40af 100%);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
   font-size: 0.875rem;
   display: inline-flex;
   align-items: center;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .loginBtn:hover {
-  background: #2a2a2e;
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #1e3a8a 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 .logoutBtn {

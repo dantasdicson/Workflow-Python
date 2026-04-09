@@ -2,15 +2,14 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
 
-class Habilidade(models.Model):
+class Categoria(models.Model):
     id = models.AutoField(primary_key=True)
     nome = models.CharField(max_length=100, unique=True)
-    descricao = models.TextField(blank=True)
 
     class Meta:
-        db_table = 'tab_habilidade'
-        verbose_name = 'Habilidade'
-        verbose_name_plural = 'Habilidades'
+        db_table = 'tab_categoria'
+        verbose_name = 'Categoria'
+        verbose_name_plural = 'Categorias'
 
     def __str__(self):
         return self.nome
@@ -56,7 +55,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     whatsapp = models.BooleanField(default=False)
     cpf = models.CharField(max_length=14, unique=True)
     freelancer = models.BooleanField(default=False)
-    habilidades = models.ManyToManyField(Habilidade, blank=True, related_name='usuarios')
+    categorias = models.ManyToManyField(Categoria, blank=True, related_name='usuarios')
     data_criacao = models.DateTimeField(auto_now_add=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -75,3 +74,20 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.nome} {self.sobre_nome}"
+
+
+class Notificacao(models.Model):
+    id = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='notificacoes')
+    titulo = models.CharField(max_length=200)
+    mensagem = models.TextField()
+    lida = models.BooleanField(default=False)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    ordem_servico = models.ForeignKey('ordens.OrdemDeServico', on_delete=models.CASCADE, null=True, blank=True)
+    
+    class Meta:
+        db_table = 'tab_notificacao'
+        ordering = ['-data_criacao']
+    
+    def __str__(self):
+        return f"Notificação para {self.usuario.nome}: {self.titulo}"
