@@ -88,7 +88,13 @@ export default function ListarServicos() {
                     <div className={styles.ordemActions}>
                       <button 
                         className={styles.detalhesBtn}
-                        onClick={() => router.push(`/detalhesOrdem?id=${ordem.id_os}`)}
+                        onClick={() => {
+                          console.log('Botão Ver Detalhes clicado!');
+                          console.log('ID da ordem:', ordem.id_os);
+                          console.log('URL que será navegada:', `/detalhesOrdem?id=${ordem.id_os}`);
+                          // Testando com window.location.href
+                          window.location.href = `/detalhesOrdem?id=${ordem.id_os}`;
+                        }}
                       >
                         Ver Detalhes
                       </button>
@@ -113,6 +119,43 @@ export default function ListarServicos() {
           )}
         </div>
       </main>
+      
+      <footer className={styles.footer}>
+        <div className={styles.footerInner}>
+          <div className={styles.footerColumns}>
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}><span className={styles.footerIcon}>{'>'}</span>Redes Sociais</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Facebook <span className={styles.footerItemIcon}></span></a></li>
+                <li><a href="#">Instagram <span className={styles.footerItemIcon}></span></a></li>
+                <li><a href="#">WhatsApp <span className={styles.footerItemIcon}></span></a></li>
+              </ul>
+            </div>
+
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}>Espaço futuro</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Item futuro 1</a></li>
+                <li><a href="#">Item futuro 2</a></li>
+                <li><a href="#">Item futuro 3</a></li>
+              </ul>
+            </div>
+
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}>Espaço futuro</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Item futuro 1</a></li>
+                <li><a href="#">Item futuro 2</a></li>
+                <li><a href="#">Item futuro 3</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className={styles.footerBottom}>
+            2026 WorkFlow. Todos os direitos reservados <span className={styles.footerRightIcon}></span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -8,7 +8,6 @@ import { getMe } from '../lib/api'
 
 export default function DetalhesOrdem() {
   const router = useRouter()
-  const { id } = router.query
   const [ordem, setOrdem] = useState(null)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -17,52 +16,107 @@ export default function DetalhesOrdem() {
   const [mensagem, setMensagem] = useState('')
 
   useEffect(() => {
-    console.log('useEffect executado, id:', id);
+    // Verificação completa da URL e ID
+    console.log('=== INÍCIO DA DEPURAÇÃO ===');
+    console.log('URL atual:', window.location.href);
+    console.log('Pathname:', window.location.pathname);
+    console.log('Search:', window.location.search);
+    
+    // Pega o ID da URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const id = urlParams.get('id')
+    
+    console.log('ID extraído da URL:', id);
+    console.log('Tipo do ID:', typeof id);
+    console.log('ID é nulo?', id === null);
+    console.log('ID é undefined?', id === undefined);
+    console.log('ID é string vazia?', id === '');
+    
     if (!id) {
-      console.log('ID não encontrado, aguardando...');
+      console.log('ID não encontrado na URL');
+      setError('ID da ordem não encontrado na URL')
+      setLoading(false)
       return
     }
 
-    ;(async () => {
-      const me = await getMe()
-      if (!me) {
-        console.log('Usuário não logado, redirecionando para login');
-        router.push('/login')
-        return
+    const fetchMe = async () => {
+      try {
+        console.log('Buscando usuário logado...');
+        const me = await getMe()
+        console.log('Usuário retornado:', me);
+        
+        // Permite que usuários não logados vejam os detalhes
+        if (me) {
+          console.log('Usuário logado, carregando detalhes da ordem:', id);
+          setUser(me)
+        } else {
+          console.log('Usuário não logado, mas permitindo visualização dos detalhes');
+        }
+        
+        // Carrega os detalhes independentemente de estar logado
+        carregarDetalhesOrdem(id)
+      } catch (err) {
+        console.error('Erro ao buscar usuário:', err)
+        // Mesmo com erro, tenta carregar os detalhes
+        carregarDetalhesOrdem(id)
       }
-      console.log('Usuário logado, carregando detalhes da ordem:', id);
-      setUser(me)
-      carregarDetalhesOrdem(id)
-    })()
-  }, [id, router])
+    }
+    fetchMe()
+  }, [])
 
   const carregarDetalhesOrdem = async (ordemId) => {
     try {
       console.log('Iniciando carregamento da ordem:', ordemId);
-      setLoading(true)
-      const response = await apiFetch(`/api/ordens/${ordemId}`)
+      console.log('Tipo do ID:', typeof ordemId);
+      console.log('ID é válido?', ordemId && !isNaN(ordemId));
       
-      console.log('Response status:', response.status);
-      console.log('Response ok:', response.ok);
+      const apiUrl = `http://127.0.0.1:8000/api/ordens/${ordemId}`
+      console.log('URL completa sendo chamada:', apiUrl);
+      
+      setLoading(true)
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          mode: 'cors',
+        })
+        
+        console.log('Response status:', response.status);
+        console.log('Response ok:', response.ok);
+        console.log('Response url:', response.url);
+        console.log('Response headers:', [...response.headers.entries()]);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.log('Ordem não encontrada (404)');
+            setError('Ordem de serviço não encontrada')
+            return
+          }
+          if (response.status === 401) {
+            console.log('Não autorizado (401), redirecionando para login');
+            router.push('/login')
+            return
+          }
+          console.log('Erro na resposta:', response.status);
+          throw new Error('Erro ao carregar detalhes da ordem de serviço')
+        }
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.log('Ordem não encontrada (404)');
-          setError('Ordem de serviço não encontrada')
-          return
+        const data = await response.json()
+        console.log('Dados recebidos:', data);
+        setOrdem(data)
+      } catch (fetchError) {
+        console.error('Erro no fetch:', fetchError);
+        console.error('Tipo do erro:', fetchError.name);
+        console.error('Mensagem do erro:', fetchError.message);
+        
+        if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
+          setError('Erro de conexão com o servidor. Verifique se o backend está rodando.')
+        } else {
+          setError(fetchError.message || 'Erro ao carregar detalhes da ordem de serviço')
         }
-        if (response.status === 401) {
-          console.log('Não autorizado (401), redirecionando para login');
-          router.push('/login')
-          return
-        }
-        console.log('Erro na resposta:', response.status);
-        throw new Error('Erro ao carregar detalhes da ordem de serviço')
       }
-
-      const data = await response.json()
-      console.log('Dados recebidos:', data);
-      setOrdem(data)
     } catch (err) {
       console.error('Erro ao carregar detalhes:', err);
       setError(err.message)

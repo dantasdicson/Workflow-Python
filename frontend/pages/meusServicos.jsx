@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Navbar from '../components/Navbar'
-import Menu from '../components/Menu'
 import styles from '../styles/MeusServicos.module.css'
 import { apiFetch } from '../lib/api'
 import { getMe } from '../lib/api'
@@ -21,13 +20,25 @@ export default function MeusServicos() {
         return
       }
       setUser(me)
-      carregarMeusServicos()
     })()
   }, [router])
 
+  useEffect(() => {
+    if (user && user.id_usuario) {
+      carregarMeusServicos()
+    }
+  }, [user])
+
   const carregarMeusServicos = async () => {
+    if (!user || !user.id_usuario) {
+      console.log('Usuário não disponível ainda')
+      return
+    }
+
     try {
       setLoading(true)
+      console.log('Carregando serviços para o usuário:', user.id_usuario)
+      
       // Buscar ordens onde o usuário é o contratante
       const response = await apiFetch(`/api/ordens?contratante_id=${user.id_usuario}`)
 
@@ -41,6 +52,7 @@ export default function MeusServicos() {
 
       const data = await response.json()
       const servicosData = Array.isArray(data) ? data : (data.results || [])
+      console.log('Serviços carregados:', servicosData)
       setServicos(servicosData)
     } catch (err) {
       setError(err.message)
@@ -79,7 +91,6 @@ export default function MeusServicos() {
   return (
     <div className={styles.container}>
       <Navbar />
-      <Menu />
       <main className={styles.main}>
         <h1 className={styles.title}>Meus Serviços</h1>
 
@@ -91,15 +102,15 @@ export default function MeusServicos() {
           {!loading && !error && (
             <div className={styles.servicosList}>
               {servicos.length === 0 ? (
-                <p className={styles.emptyMessage}>
-                  Você ainda não criou nenhum serviço. 
+                <div className={styles.emptyMessage}>
+                  <p>Você ainda não criou nenhum serviço.</p>
                   <button 
                     className={styles.createBtn}
                     onClick={() => router.push('/criarServico')}
                   >
                     Criar primeiro serviço
                   </button>
-                </p>
+                </div>
               ) : (
                 servicos.map((servico) => (
                   <div key={servico.id_os} className={styles.servicoCard}>
@@ -125,7 +136,10 @@ export default function MeusServicos() {
                     </div>
 
                     <div className={styles.cardActions}>
-                      <button className={styles.viewBtn}>
+                      <button 
+                        className={styles.viewBtn}
+                        onClick={() => router.push(`/detalhesOrdem?id=${servico.id_os}`)}
+                      >
                         Ver Detalhes
                       </button>
                       {servico.status === 'aberta' && (
@@ -141,6 +155,43 @@ export default function MeusServicos() {
           )}
         </div>
       </main>
+      
+      <footer className={styles.footer}>
+        <div className={styles.footerInner}>
+          <div className={styles.footerColumns}>
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}><span className={styles.footerIcon}></span>Redes Sociais</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Facebook <span className={styles.footerItemIcon}></span></a></li>
+                <li><a href="#">Instagram <span className={styles.footerItemIcon}></span></a></li>
+                <li><a href="#">WhatsApp <span className={styles.footerItemIcon}></span></a></li>
+              </ul>
+            </div>
+
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}>Espaço futuro</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Item futuro 1</a></li>
+                <li><a href="#">Item futuro 2</a></li>
+                <li><a href="#">Item futuro 3</a></li>
+              </ul>
+            </div>
+
+            <div className={styles.footerColumn}>
+              <h3 className={styles.footerTitle}>Espaço futuro</h3>
+              <ul className={styles.footerList}>
+                <li><a href="#">Item futuro 1</a></li>
+                <li><a href="#">Item futuro 2</a></li>
+                <li><a href="#">Item futuro 3</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div className={styles.footerBottom}>
+            2026 WorkFlow. Todos os direitos reservados <span className={styles.footerRightIcon}></span>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
