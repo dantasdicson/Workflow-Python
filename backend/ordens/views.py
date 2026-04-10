@@ -3,14 +3,18 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from .models import OrdemDeServico
 from .serializers import OrdemDeServicoSerializer
+from .filters import OrdemDeServicoFilter
 from usuarios.models import Notificacao
 
 class OrdemDeServicoViewSet(viewsets.ModelViewSet):
     queryset = OrdemDeServico.objects.prefetch_related('contratante', 'freelancer_selecionado', 'freelancers_candidatos', 'categorias_necessarias')
     serializer_class = OrdemDeServicoSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = OrdemDeServicoFilter
 
     def get_permissions(self):
         if getattr(self, 'action', None) in {'list', 'retrieve'}:
