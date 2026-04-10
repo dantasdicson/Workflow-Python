@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Navbar from '../components/Navbar'
-import Menu from '../components/Menu'
 import styles from '../styles/ListarServicos.module.css'
 import { apiFetch } from '../lib/api'
 import { getMe } from '../lib/api'
@@ -57,7 +56,6 @@ export default function ListarServicos() {
   return (
     <div className={styles.container}>
       <Navbar />
-      <Menu />
       <main className={styles.main}>
         <h1 className={styles.title}>Ordens de Serviço</h1>
 
@@ -83,6 +81,10 @@ export default function ListarServicos() {
                     <p><strong>Descrição:</strong> {ordem.descricao_servico}</p>
                     <p><strong>Valor estimado:</strong> R$ {ordem.valor_estimado_minimo} - R$ {ordem.valor_estimado_maximo}</p>
                     <p><strong>Data de criação:</strong> {new Date(ordem.data_criacao).toLocaleDateString('pt-BR')}</p>
+                    <p><strong>ID do Contratante:</strong> {ordem.id_usuario}</p>
+                    {ordem.usuario && (
+                      <p><strong>Nome do Contratante:</strong> {ordem.usuario.nome}</p>
+                    )}
                     <p><strong>Candidatos:</strong> {ordem.freelancers_candidatos?.length || 0}/7</p>
                     
                     <div className={styles.ordemActions}>
