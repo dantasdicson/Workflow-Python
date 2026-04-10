@@ -59,7 +59,8 @@ export default function Navbar() {
       </div>
       <nav>
         <div className={styles.navLinks}>
-          <a href="#about">Sobre nós</a>
+          <a href="/">Página Inicial</a>
+          <a href="/quemSomos">Sobre nós</a>
           <a href="/listarServicos">Ordens de Serviço</a>
           <a href="#dashboard">Meu Painel</a>
         </div>
