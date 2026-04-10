@@ -39,8 +39,8 @@ export default function MeusServicos() {
       setLoading(true)
       console.log('Carregando serviços para o usuário:', user.id_usuario)
       
-      // Buscar ordens onde o usuário é o contratante
-      const response = await apiFetch(`/api/ordens?contratante_id=${user.id_usuario}`)
+      // Buscar todas as ordens e filtrar no frontend
+      const response = await apiFetch('/api/ordens')
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -51,9 +51,19 @@ export default function MeusServicos() {
       }
 
       const data = await response.json()
-      const servicosData = Array.isArray(data) ? data : (data.results || [])
-      console.log('Serviços carregados:', servicosData)
-      setServicos(servicosData)
+      const todosServicos = Array.isArray(data) ? data : (data.results || [])
+      console.log('Todos os serviços carregados:', todosServicos)
+      console.log('ID do usuário logado:', user.id_usuario)
+      
+      // Filtrar apenas os serviços do usuário logado
+      const servicosDoUsuario = todosServicos.filter(servico => {
+        const isDoUsuario = servico.id_usuario === user.id_usuario
+        console.log(`- Serviço ${servico.id_os}: ID do contratante = ${servico.id_usuario} | É do usuário? ${isDoUsuario}`)
+        return isDoUsuario
+      })
+      
+      console.log('Serviços filtrados para o usuário:', servicosDoUsuario)
+      setServicos(servicosDoUsuario)
     } catch (err) {
       setError(err.message)
       console.error('Erro ao carregar serviços:', err)
@@ -125,6 +135,10 @@ export default function MeusServicos() {
                       <p><strong>Descrição:</strong> {servico.descricao_servico}</p>
                       <p><strong>Valor estimado:</strong> R$ {servico.valor_estimado_minimo} - R$ {servico.valor_estimado_maximo}</p>
                       <p><strong>Data de criação:</strong> {new Date(servico.data_criacao).toLocaleDateString('pt-BR')}</p>
+                      <p><strong>ID do Contratante:</strong> {servico.id_usuario}</p>
+                      {servico.usuario && (
+                        <p><strong>Nome do Contratante:</strong> {servico.usuario.nome}</p>
+                      )}
                       
                       {servico.freelancer_selecionado && (
                         <p><strong>Freelancer selecionado:</strong> {servico.freelancer_selecionado.nome}</p>
