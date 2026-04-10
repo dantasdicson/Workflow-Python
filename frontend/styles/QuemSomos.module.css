@@ -1,0 +1,310 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.main {
+  width: 100%;
+  max-width: 1200px;
+  margin: 2rem auto 0 auto;
+  background: rgba(255,255,255,0.10);
+  border-radius: 2rem;
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 2.5rem 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 2.5rem;
+  margin-bottom: 3rem;
+  color: #ffffff;
+  font-weight: 600;
+  text-align: center;
+}
+
+.aboutSection {
+  margin-bottom: 4rem;
+}
+
+.subtitle {
+  font-size: 2rem;
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.description {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: rgba(248, 250, 252, 0.9);
+  margin-bottom: 1.5rem;
+  text-align: justify;
+}
+
+.description:last-child {
+  margin-bottom: 0;
+}
+
+.contactSection {
+  background: rgba(255,255,255,0.05);
+  border-radius: 1.5rem;
+  padding: 3rem;
+  margin-bottom: 4rem;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.contactTitle {
+  font-size: 2rem;
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.contactInfo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: rgba(255,255,255,0.08);
+  border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.3s ease;
+}
+
+.contactItem:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.12);
+}
+
+.contactIcon {
+  font-size: 3rem;
+  min-width: 60px;
+  text-align: center;
+}
+
+.contactDetails h3 {
+  font-size: 1.3rem;
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.contactLink {
+  font-size: 1.1rem;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.contactLink:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+.missionSection {
+  text-align: center;
+  padding: 3rem;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.missionTitle {
+  font-size: 2rem;
+  color: #ffffff;
+  font-weight: 600;
+  margin-bottom: 2rem;
+}
+
+.missionDescription {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: rgba(248, 250, 252, 0.9);
+  max-width: 800px;
+  margin: 0 auto;
+  font-style: italic;
+}
+
+/* Footer Styles */
+.footer {
+  width: 100%;
+  margin-top: 3rem;
+  padding: 2.5rem 1.75rem;
+  display: flex;
+  justify-content: center;
+}
+
+.footerInner {
+  width: 100%;
+  max-width: 1400px;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+}
+
+.footerColumns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+@media (max-width: 768px) {
+  .footerColumns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.footerTitle {
+  margin: 0 0 0.75rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #f8fafc;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.footerIcon {
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.footerItemIcon {
+  margin-left: 0.5rem;
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.footerRightIcon {
+  margin-left: 0.5rem;
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.footerList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footerList a {
+  color: rgba(248, 250, 252, 0.85);
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.footerList a:hover {
+  color: #ffffff;
+}
+
+.footerBottom {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  color: rgba(248, 250, 252, 0.75);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main {
+    padding: 2rem 1.5rem;
+    margin: 1rem auto 0 auto;
+  }
+
+  .title {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .description {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .contactSection {
+    padding: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .contactTitle {
+    font-size: 1.5rem;
+  }
+
+  .contactInfo {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .contactItem {
+    padding: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .contactIcon {
+    font-size: 2.5rem;
+  }
+
+  .missionSection {
+    padding: 2rem;
+  }
+
+  .missionTitle {
+    font-size: 1.5rem;
+  }
+
+  .missionDescription {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 2rem;
+  }
+
+  .content {
+    padding: 0 1rem;
+  }
+
+  .contactSection {
+    padding: 1.5rem;
+  }
+
+  .contactItem {
+    padding: 1rem;
+  }
+}

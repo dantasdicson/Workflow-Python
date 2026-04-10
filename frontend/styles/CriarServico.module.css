@@ -383,6 +383,67 @@
   text-align: center;
 }
 
+.loadingContainer {
+  text-align: center;
+  padding: 3rem;
+  color: rgba(248, 250, 252, 0.9);
+  font-size: 1.1rem;
+}
+
+.authErrorContainer {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 1rem;
+  margin: 2rem 0;
+  backdrop-filter: blur(10px);
+}
+
+.authErrorIcon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.authErrorContainer h2 {
+  color: #ef4444;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.authErrorContainer p {
+  color: rgba(248, 250, 252, 0.9);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.redirectMessage {
+  font-size: 0.95rem;
+  color: rgba(248, 250, 252, 0.7);
+  font-style: italic;
+}
+
+.redirectButton {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.redirectButton:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
 @media (max-width: 640px) {
   .row {
     grid-template-columns: 1fr;
@@ -406,5 +467,18 @@
     font-size: 3rem;
     width: 80px;
     height: 80px;
+  }
+  
+  .authErrorContainer {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+  
+  .authErrorIcon {
+    font-size: 3rem;
+  }
+  
+  .authErrorContainer h2 {
+    font-size: 1.5rem;
   }
 }

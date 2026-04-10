@@ -7,7 +7,7 @@ export default function Home() {
       <Navbar />
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Conecte-se a freelancers e contrate seu serviço com rapidez e segurança! 🧑‍💻
+          Conecte-se a freelancers e contrate seu serviço com rapidez e segurança! {"\ud83d\udc68\u200d\ud83d\udcbb"}
         </h1>
       </main>
 

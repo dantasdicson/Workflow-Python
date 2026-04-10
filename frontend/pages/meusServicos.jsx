@@ -160,11 +160,11 @@ export default function MeusServicos() {
         <div className={styles.footerInner}>
           <div className={styles.footerColumns}>
             <div className={styles.footerColumn}>
-              <h3 className={styles.footerTitle}><span className={styles.footerIcon}></span>Redes Sociais</h3>
+              <h3 className={styles.footerTitle}><span className={styles.footerIcon}>{"\ud83c\udf10"}</span>Redes Sociais</h3>
               <ul className={styles.footerList}>
-                <li><a href="#">Facebook <span className={styles.footerItemIcon}></span></a></li>
-                <li><a href="#">Instagram <span className={styles.footerItemIcon}></span></a></li>
-                <li><a href="#">WhatsApp <span className={styles.footerItemIcon}></span></a></li>
+                <li><a href="#">Facebook <span className={styles.footerItemIcon}>{"\ud83d\udcd8"}</span></a></li>
+                <li><a href="#">Instagram <span className={styles.footerItemIcon}>{"\ud83d\udcf8"}</span></a></li>
+                <li><a href="#">WhatsApp <span className={styles.footerItemIcon}>{"\ud83d\udcac"}</span></a></li>
               </ul>
             </div>
 
@@ -188,7 +188,7 @@ export default function MeusServicos() {
           </div>
 
           <div className={styles.footerBottom}>
-            2026 WorkFlow. Todos os direitos reservados <span className={styles.footerRightIcon}></span>
+            2026 WorkFlow. Todos os direitos reservados <span className={styles.footerRightIcon}>{"\ud83d\udd12"}</span>
           </div>
         </div>
       </footer>

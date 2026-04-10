@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Navbar from '../components/Navbar'
 import styles from '../styles/CriarServico.module.css'
-import { apiFetch } from '../lib/api'
+import { apiFetch, getMe } from '../lib/api'
 
 export default function CriarServico() {
   console.log('=== COMPONENTE CriarServico RENDERIZADO ===')
@@ -20,10 +20,41 @@ export default function CriarServico() {
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(false)
   const [categoriasLoading, setCategoriasLoading] = useState(true)
+  const [user, setUser] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [authError, setAuthError] = useState(null)
 
   useEffect(() => {
-    carregarCategorias()
+    verificarAutenticacao()
   }, [])
+
+  const verificarAutenticacao = async () => {
+    try {
+      setAuthLoading(true)
+      const me = await getMe()
+      
+      if (!me) {
+        setAuthError('Você precisa estar logado para criar uma Ordem de Serviço')
+        // Redirecionar para login após 3 segundos
+        setTimeout(() => {
+          router.push('/login')
+        }, 3000)
+        return
+      }
+      
+      setUser(me)
+      // Se usuário estiver logado, carregar categorias
+      carregarCategorias()
+    } catch (err) {
+      console.error('Erro ao verificar autenticação:', err)
+      setAuthError('Erro ao verificar autenticação. Tente novamente.')
+      setTimeout(() => {
+        router.push('/login')
+      }, 3000)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
 
   const carregarCategorias = async () => {
     try {
@@ -117,6 +148,31 @@ export default function CriarServico() {
       <main className={styles.main}>
         <h1 className={styles.title}>Criar Ordem de Serviço</h1>
 
+        {authLoading && (
+          <div className={styles.loadingContainer}>
+            <p>Verificando autenticação...</p>
+          </div>
+        )}
+
+        {authError && (
+          <div className={styles.authErrorContainer}>
+            <div className={styles.authErrorIcon}>{"\ud83d\udd12"}</div>
+            <h2>Acesso Restrito</h2>
+            <p>{authError}</p>
+            <p className={styles.redirectMessage}>
+              Você será redirecionado para a página de login em instantes...
+            </p>
+            <button 
+              className={styles.redirectButton}
+              onClick={() => router.push('/login')}
+            >
+              Ir para Login Agora
+            </button>
+          </div>
+        )}
+
+        {!authLoading && !authError && user && (
+          <>
         {success && (
         <div className={styles.successModal}>
           <div className={styles.successContent}>
@@ -232,17 +288,19 @@ export default function CriarServico() {
             {loading ? 'Criando...' : 'Criar Ordem'}
           </button>
         </form>
+          </>
+        )}
       </main>
       
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div className={styles.footerColumns}>
             <div className={styles.footerColumn}>
-              <h3 className={styles.footerTitle}><span className={styles.footerIcon}></span>Redes Sociais</h3>
+              <h3 className={styles.footerTitle}><span className={styles.footerIcon}>{"\ud83c\udf10"}</span>Redes Sociais</h3>
               <ul className={styles.footerList}>
-                <li><a href="#">Facebook <span className={styles.footerItemIcon}></span></a></li>
-                <li><a href="#">Instagram <span className={styles.footerItemIcon}></span></a></li>
-                <li><a href="#">WhatsApp <span className={styles.footerItemIcon}></span></a></li>
+                <li><a href="#">Facebook <span className={styles.footerItemIcon}>{"\ud83d\udcd8"}</span></a></li>
+                <li><a href="#">Instagram <span className={styles.footerItemIcon}>{"\ud83d\udcf8"}</span></a></li>
+                <li><a href="#">WhatsApp <span className={styles.footerItemIcon}>{"\ud83d\udcac"}</span></a></li>
               </ul>
             </div>
 
@@ -266,7 +324,7 @@ export default function CriarServico() {
           </div>
 
           <div className={styles.footerBottom}>
-            2026 WorkFlow. Todos os direitos reservados <span className={styles.footerRightIcon}></span>
+            2026 WorkFlow. Todos os direitos reservados <span className={styles.footerRightIcon}>{"\ud83d\udd12"}</span>
           </div>
         </div>
       </footer>
