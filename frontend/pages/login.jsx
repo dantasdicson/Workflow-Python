@@ -49,8 +49,21 @@ export default function Login() {
         throw new Error(detail)
       }
 
-      await res.json()
-      window.location.href = '/listarServicos'
+      const data = await res.json()
+      
+      console.log('=== Login Debug ===')
+      console.log('Dados recebidos:', data)
+      console.log('Login successful:', data.ok)
+      
+      // O backend armazena os tokens em cookies (wf_access e wf_refresh)
+      // Não precisamos armazenar no localStorage
+      console.log('Tokens armazenados em cookies pelo backend')
+      console.log('Login realizado com sucesso, redirecionando...')
+      
+      // Pequeno delay para garantir que os cookies sejam definidos
+      setTimeout(() => {
+        window.location.href = '/listarServicos'
+      }, 100)
     } catch (err) {
       setError(err.message)
     } finally {
