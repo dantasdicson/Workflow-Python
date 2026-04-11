@@ -1,13 +1,32 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import OrdemDeServico
 from .serializers import OrdemDeServicoSerializer
 from .filters import OrdemDeServicoFilter
 from usuarios.models import Notificacao
+
+@api_view(['GET'])
+def test_auth(request):
+    """
+    Endpoint de teste para verificar se a autenticação está funcionando
+    """
+    if request.user.is_authenticated:
+        return Response({
+            'authenticated': True,
+            'user_id': request.user.id_usuario,
+            'username': request.user.login,
+            'is_freelancer': hasattr(request.user, 'freelancer')
+        })
+    else:
+        return Response({
+            'authenticated': False,
+            'error': 'User not authenticated'
+        }, status=401)
 
 class OrdemDeServicoViewSet(viewsets.ModelViewSet):
     queryset = OrdemDeServico.objects.prefetch_related('contratante', 'freelancer_selecionado', 'freelancers_candidatos', 'categorias_necessarias')
@@ -60,14 +79,28 @@ class OrdemDeServicoViewSet(viewsets.ModelViewSet):
         
         # Verificar limite de 7 candidatos
         candidatos_count = ordem.freelancers_candidatos.count()
+        print(f"=== DEBUG CANDIDATURA ===")
+        print(f"ID da Ordem: {ordem.id_os}")
+        print(f"Usuário candidatando: {usuario.id_usuario} - {usuario.nome}")
+        print(f"Candidatos atuais: {candidatos_count}")
+        print(f"Lista de candidatos atuais: {[f'{c.id_usuario}-{c.nome}' for c in ordem.freelancers_candidatos.all()]}")
+        
         if candidatos_count >= 7:
+            print(f"ERRO: Limite de 7 candidatos atingido ({candidatos_count})")
             return Response(
                 {'error': 'Esta ordem de serviço já atingiu o limite de 7 candidatos'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
         # Adicionar freelancer aos candidatos
+        print(f"Adicionando usuário {usuario.id_usuario} aos candidatos...")
         ordem.freelancers_candidatos.add(usuario)
+        
+        # Verificar se foi adicionado
+        novos_candidatos = ordem.freelancers_candidatos.count()
+        print(f"Candidatos após adição: {novos_candidatos}")
+        print(f"Lista de candidatos após adição: {[f'{c.id_usuario}-{c.nome}' for c in ordem.freelancers_candidatos.all()]}")
+        print(f"=== FIM DEBUG CANDIDATURA ===")
         
         # Criar notificação para o freelancer
         Notificacao.objects.create(

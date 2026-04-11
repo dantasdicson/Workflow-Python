@@ -42,7 +42,7 @@ export default async function handler(req, res) {
   setCookie(
     res,
     serializeCookie('wf_access', data.access, {
-      httpOnly: true,
+      httpOnly: false,  // Alterado para false para permitir acesso via JavaScript
       sameSite: 'lax',
       secure: isProd,
       path: '/',
@@ -53,7 +53,7 @@ export default async function handler(req, res) {
   setCookie(
     res,
     serializeCookie('wf_refresh', data.refresh, {
-      httpOnly: true,
+      httpOnly: false,  // Alterado para false para permitir acesso via JavaScript
       sameSite: 'lax',
       secure: isProd,
       path: '/',

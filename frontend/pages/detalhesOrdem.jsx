@@ -126,7 +126,14 @@ export default function DetalhesOrdem() {
   }
 
   const handleCandidatar = async () => {
+    console.log('=== INÍCIO DA CANDIDATURA ===')
+    console.log('Usuário:', user)
+    console.log('É freelancer?', user?.freelancer)
+    console.log('Ordem:', ordem)
+    console.log('ID da ordem:', ordem?.id_os)
+    
     if (!user?.freelancer) {
+      console.log('Usuário não é freelancer ou não está logado')
       setMensagem('Apenas freelancers podem se candidatar')
       return
     }
@@ -134,31 +141,104 @@ export default function DetalhesOrdem() {
     try {
       setCandidatando(true)
       setMensagem('')
-
-      const response = await apiFetch(`/api/ordens/${ordem.id_os}/candidatar/`, {
+      
+      // Primeiro, testar se a autenticação está funcionando
+      console.log('=== TESTE DE AUTENTICAÇÃO ===')
+      
+      // Verificar cookies disponíveis
+      console.log('Todos os cookies:', document.cookie)
+      
+      // Função para extrair cookie
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+      
+      const accessToken = getCookie('wf_access')
+      const refreshToken = getCookie('wf_refresh')
+      
+      console.log('wf_access encontrado:', !!accessToken)
+      console.log('wf_refresh encontrado:', !!refreshToken)
+      console.log('wf_access (primeiros 20 chars):', accessToken ? accessToken.substring(0, 20) + '...' : 'null')
+      
+      if (!accessToken) {
+        console.log('ERRO: Token wf_access não encontrado nos cookies')
+        setMensagem('Token de autenticação não encontrado. Faça login novamente.')
+        return
+      }
+      
+      // Testar endpoint de autenticação primeiro
+      console.log('Testando endpoint de autenticação...')
+      const authResponse = await fetch('http://127.0.0.1:8000/api/test-auth/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        credentials: 'same-origin'
+      })
+      
+      console.log('Auth response status:', authResponse.status)
+      const authData = await authResponse.json()
+      console.log('Auth response data:', authData)
+      
+      if (!authResponse.ok || !authData.authenticated) {
+        console.log('ERRO: Autenticação falhou no endpoint de teste')
+        setMensagem('Autenticação falhou. Faça login novamente.')
+        return
+      }
+      
+      console.log('Autenticação funcionou! Prosseguindo com candidatura...')
+      
+      // Agora tentar a candidatura
+      const apiUrl = `http://127.0.0.1:8000/api/ordens/${ordem.id_os}/candidatar/`
+      console.log('URL da candidatura:', apiUrl)
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-        }
+          'Authorization': `Bearer ${accessToken}`
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({})
       })
 
+      console.log('Candidatura response status:', response.status)
+      console.log('Candidatura response ok:', response.ok)
+
       if (!response.ok) {
-        const errorData = await response.json()
-        setMensagem(errorData.error || 'Erro ao se candidatar')
+        console.log('Resposta não OK, status:', response.status)
+        
+        let errorMessage = `Erro ${response.status}: Não foi possível se candidatar`
+        try {
+          const errorData = await response.json()
+          console.log('Error data:', errorData)
+          errorMessage = errorData.error || errorData.detail || errorMessage
+        } catch (e) {
+          console.log('Não foi possível ler o erro como JSON')
+        }
+        
+        setMensagem(errorMessage)
         return
       }
 
       const data = await response.json()
-      setMensagem(data.message)
+      console.log('Resposta de sucesso:', data)
+      setMensagem(data.message || 'Candidatura enviada com sucesso!')
       
-      // Redirecionar para a página da ordem após 2 segundos
+      // Recarregar os detalhes da ordem para atualizar a lista de candidatos
       setTimeout(() => {
-        router.push(`/detalhesOrdem?id=${ordem.id_os}`)
-      }, 2000)
+        carregarDetalhesOrdem(ordem.id_os)
+      }, 1000)
 
     } catch (err) {
-      setMensagem('Erro ao se candidatar. Tente novamente.')
       console.error('Erro na candidatura:', err)
+      console.error('Tipo do erro:', err.name)
+      console.error('Mensagem do erro:', err.message)
+      setMensagem(`Erro: ${err.message}`)
     } finally {
       setCandidatando(false)
     }
