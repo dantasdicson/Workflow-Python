@@ -38,7 +38,7 @@ class OrdemDeServicoViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if getattr(self, 'action', None) in {'list', 'retrieve'}:
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsAuthenticated()]  # DELETE (destroy) requer autenticação
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def candidatar(self, request, pk=None):
@@ -124,3 +124,49 @@ class OrdemDeServicoViewSet(viewsets.ModelViewSet):
             'ordem_id': ordem.id_os,
             'total_candidatos': ordem.freelancers_candidatos.count()
         }, status=status.HTTP_200_OK)
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Excluir uma ordem de serviço
+        Apenas o contratante pode excluir suas próprias ordens
+        """
+        ordem = self.get_object()
+        usuario = request.user
+        
+        print(f"=== DEBUG EXCLUSÃO ===")
+        print(f"Ordem a ser excluída: {ordem.id_os}")
+        print(f"Usuário solicitante: {usuario.id_usuario} - {usuario.nome}")
+        print(f"Contratante da ordem: {ordem.contratante.id_usuario} - {ordem.contratante.nome}")
+        
+        # Verificar se o usuário é o contratante da ordem
+        if ordem.contratante.id_usuario != usuario.id_usuario:
+            print(f"ERRO: Usuário não é o contratante da ordem")
+            return Response(
+                {'error': 'Você não tem permissão para excluir esta ordem de serviço'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Verificar se há candidatos (não permitir excluir se tiver candidatos)
+        if ordem.freelancers_candidatos.exists():
+            print(f"ERRO: Ordem tem {ordem.freelancers_candidatos.count()} candidatos")
+            return Response(
+                {'error': 'Não é possível excluir ordens que já possuem candidatos'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verificar se está em execução ou concluída
+        if ordem.status in ['em_execucao', 'concluido']:
+            print(f"ERRO: Ordem está com status {ordem.status}")
+            return Response(
+                {'error': 'Não é possível excluir ordens em execução ou concluídas'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        print(f"Excluindo ordem {ordem.id_os}...")
+        ordem.delete()
+        print(f"Ordem {ordem.id_os} excluída com sucesso!")
+        
+        return Response(
+            {'message': 'Ordem de serviço excluída com sucesso!'},
+            status=status.HTTP_200_OK
+        )
