@@ -45,20 +45,31 @@ export default function DetalhesOrdem() {
         const me = await getMe()
         console.log('Usuário retornado:', me);
         
-        // Permite que usuários não logados vejam os detalhes
+        // Exige autenticação para ver detalhes da ordem
         if (me) {
           console.log('Usuário logado, carregando detalhes da ordem:', id);
           setUser(me)
+          // Carrega os detalhes apenas se estiver logado
+          carregarDetalhesOrdem(id)
         } else {
-          console.log('Usuário não logado, mas permitindo visualização dos detalhes');
+          console.log('Usuário não logado, redirecionando para login');
+          setError('Você precisa estar logado para ver os detalhes da ordem')
+          setLoading(false)
+          // Redireciona para login após 2 segundos
+          setTimeout(() => {
+            router.push('/login')
+          }, 2000)
+          return
         }
-        
-        // Carrega os detalhes independentemente de estar logado
-        carregarDetalhesOrdem(id)
       } catch (err) {
         console.error('Erro ao buscar usuário:', err)
-        // Mesmo com erro, tenta carregar os detalhes
-        carregarDetalhesOrdem(id)
+        // Em caso de erro, redireciona para login
+        setError('Erro ao verificar autenticação. Por favor, faça login.')
+        setLoading(false)
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
+        return
       }
     }
     fetchMe()
@@ -70,7 +81,7 @@ export default function DetalhesOrdem() {
       console.log('Tipo do ID:', typeof ordemId);
       console.log('ID é válido?', ordemId && !isNaN(ordemId));
       
-      const apiUrl = `http://127.0.0.1:8000/api/ordens/${ordemId}`
+      const apiUrl = `http://127.0.0.1:8000/api/ordens/${ordemId}/`
       console.log('URL completa sendo chamada:', apiUrl);
       
       setLoading(true)
@@ -135,6 +146,13 @@ export default function DetalhesOrdem() {
     if (!user?.freelancer) {
       console.log('Usuário não é freelancer ou não está logado')
       setMensagem('Apenas freelancers podem se candidatar')
+      return
+    }
+
+    // Verificar se o usuário é o criador da ordem (não pode se candidatar à própria ordem)
+    if (ordem?.contratante?.id_usuario === user.id_usuario) {
+      console.log('Usuário é o criador da ordem - não permitido')
+      setMensagem('Você não pode se candidatar à sua própria ordem de serviço')
       return
     }
 
@@ -258,7 +276,6 @@ export default function DetalhesOrdem() {
     return (
       <div className={styles.container}>
         <Navbar />
-        <Menu />
         <main className={styles.main}>
           <p>Carregando detalhes da ordem de serviço...</p>
         </main>
@@ -270,7 +287,6 @@ export default function DetalhesOrdem() {
     return (
       <div className={styles.container}>
         <Navbar />
-        <Menu />
         <main className={styles.main}>
           <p className={styles.error}>Erro: {error}</p>
         </main>
@@ -282,7 +298,6 @@ export default function DetalhesOrdem() {
     return (
       <div className={styles.container}>
         <Navbar />
-        <Menu />
         <main className={styles.main}>
           <p>Ordem de serviço não encontrada</p>
         </main>
@@ -293,7 +308,6 @@ export default function DetalhesOrdem() {
   return (
     <div className={styles.container}>
       <Navbar />
-      <Menu />
       <main className={styles.main}>
         <div className={styles.ordemHeader}>
           <h1 className={styles.title}>Ordem de Serviço #{ordem.id_os}</h1>

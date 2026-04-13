@@ -107,38 +107,118 @@ export default function CriarServico() {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     console.log('=== handleSubmit CHAMADO ===')
     
-    // Teste ultra-simplificado
     try {
       e.preventDefault()
       console.log('preventDefault funcionou')
       
-      // Teste básico de estado
-      console.log('Estado atual:', {
+      if (!user || !user.id_usuario) {
+        setError('Usuário não autenticado')
+        return
+      }
+      
+      setLoading(true)
+      setError(null)
+      
+      // Preparar dados para enviar
+      const formData = new FormData()
+      formData.append('descricao_servico', form.descricao_servico)
+      formData.append('valor_estimado_minimo', form.valor_estimado_minimo)
+      formData.append('valor_estimado_maximo', form.valor_estimado_maximo)
+      formData.append('contratante_id', user.id_usuario) // Enviando ID do usuário como contratante
+      
+      if (form.imagem) {
+        formData.append('imagem', form.imagem)
+      }
+      
+      // Enviar categorias
+      if (form.categorias_necessarias && form.categorias_necessarias.length > 0) {
+        form.categorias_necessarias.forEach(categoriaId => {
+          formData.append('categorias_necessarias', categoriaId)
+        })
+      }
+      
+      console.log('Enviando dados:', {
         descricao: form.descricao_servico,
         valorMin: form.valor_estimado_minimo,
         valorMax: form.valor_estimado_maximo,
+        contratante_id: user.id_usuario,
         categorias: form.categorias_necessarias
       })
       
-      // Teste de setState
-      setError('Teste de erro')
-      console.log('setError funcionou')
+      console.log('=== DEBUG REQUISIÇÃO ===')
+      console.log('URL: http://127.0.0.1:8000/api/ordens/')
+      console.log('Método: POST')
+      console.log('FormData entries:')
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value)
+      }
+      console.log('=== FIM DEBUG REQUISIÇÃO ===')
+      
+      // Extrair token JWT dos cookies para autenticação manual
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+      
+      const token = getCookie('wf_access');
+      console.log('Token JWT encontrado:', !!token);
+      
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('Header Authorization adicionado');
+      } else {
+        console.log('ERRO: Token wf_access não encontrado nos cookies');
+        console.log('Cookies disponíveis:', document.cookie);
+      }
+      
+      const response = await fetch('http://127.0.0.1:8000/api/ordens/', {
+        method: 'POST',
+        body: formData,
+        headers: headers,
+        mode: 'cors',
+        credentials: 'include'
+      })
+      
+      if (!response.ok) {
+        console.log('=== ERRO NA RESPOSTA ===')
+        console.log('Status:', response.status)
+        console.log('Status Text:', response.statusText)
+        
+        try {
+          const errorData = await response.json()
+          console.log('Error Data:', JSON.stringify(errorData, null, 2))
+          
+          // Tentar diferentes campos de erro
+          const errorMessage = errorData.error || errorData.detail || errorData.message || JSON.stringify(errorData)
+          console.log('Mensagem de erro:', errorMessage)
+          throw new Error(errorMessage)
+        } catch (jsonError) {
+          console.log('Erro ao fazer parse do JSON:', jsonError)
+          const text = await response.text()
+          console.log('Resposta como texto:', text)
+          throw new Error(text || 'Erro ao criar ordem de serviço')
+        }
+      }
+      
+      const data = await response.json()
+      console.log('Ordem criada com sucesso:', data)
       
       setSuccess(true)
-      console.log('setSuccess funcionou')
-      
-      // Teste de redirecionamento
       setTimeout(() => {
-        console.log('Iniciando redirecionamento')
-        router.push('/listarServicos')
-      }, 1000)
+        router.push('/meusServicos')
+      }, 2000)
       
     } catch (error) {
       console.error('ERRO NO handleSubmit:', error)
-      alert('Erro no handleSubmit: ' + error.message)
+      setError(error.message || 'Erro ao criar ordem de serviço')
+    } finally {
+      setLoading(false)
     }
   }
 

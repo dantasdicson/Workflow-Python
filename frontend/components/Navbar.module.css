@@ -9,8 +9,9 @@
   padding: 1.25rem 2.5rem;
   margin: 1.75rem;
   position: relative;
-  width: calc(100% - 3.5rem);
+  width: 100%;
   max-width: 1400px;
+  box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
@@ -24,13 +25,13 @@
 .logoArea {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .logoContainer {
   position: relative;
-  height: 3.5rem;
-  width: 3.5rem;
+  height: 4.5rem;
+  width: 4.5rem;
   overflow: hidden;
   border-radius: 1rem;
   border: 1px solid rgba(255,255,255,0.2);
@@ -45,7 +46,7 @@
 }
 
 .subtitle {
-  font-size: 11px;
+  font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.35em;
   color: #a1a1aa;
@@ -53,7 +54,7 @@
 }
 
 .projectTitle {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: white;
   margin: 0;
