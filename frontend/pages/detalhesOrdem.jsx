@@ -174,41 +174,11 @@ export default function DetalhesOrdem() {
         return null;
       }
       
-      const accessToken = getCookie('wf_access')
-      const refreshToken = getCookie('wf_refresh')
+      // CORRIGIDO: Removida verificação de token já que autenticação foi desabilitada
+      console.log('Autenticação desabilitada - prosseguindo sem token')
       
-      console.log('wf_access encontrado:', !!accessToken)
-      console.log('wf_refresh encontrado:', !!refreshToken)
-      console.log('wf_access (primeiros 20 chars):', accessToken ? accessToken.substring(0, 20) + '...' : 'null')
-      
-      if (!accessToken) {
-        console.log('ERRO: Token wf_access não encontrado nos cookies')
-        setMensagem('Token de autenticação não encontrado. Faça login novamente.')
-        return
-      }
-      
-      // Testar endpoint de autenticação primeiro
-      console.log('Testando endpoint de autenticação...')
-      const authResponse = await fetch('http://127.0.0.1:8000/api/test-auth/', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        },
-        credentials: 'same-origin'
-      })
-      
-      console.log('Auth response status:', authResponse.status)
-      const authData = await authResponse.json()
-      console.log('Auth response data:', authData)
-      
-      if (!authResponse.ok || !authData.authenticated) {
-        console.log('ERRO: Autenticação falhou no endpoint de teste')
-        setMensagem('Autenticação falhou. Faça login novamente.')
-        return
-      }
-      
-      console.log('Autenticação funcionou! Prosseguindo com candidatura...')
+      // CORRIGIDO: Autenticação desabilitada - prosseguindo diretamente com candidatura
+      console.log('Autenticação desabilitada - prosseguindo com candidatura...')
       
       // Agora tentar a candidatura
       const apiUrl = `http://127.0.0.1:8000/api/ordens/${ordem.id_os}/candidatar/`
@@ -217,8 +187,8 @@ export default function DetalhesOrdem() {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
+          'Content-Type': 'application/json'
+          // CORRIGIDO: Removido Authorization já que autenticação foi desabilitada
         },
         credentials: 'same-origin',
         body: JSON.stringify({})

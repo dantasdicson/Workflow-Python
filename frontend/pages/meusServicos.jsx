@@ -41,16 +41,7 @@ export default function MeusServicos() {
       console.log('Carregando serviços para o usuário:', user.id_usuario)
       
       // Buscar todas as ordens e filtrar no frontend
-      const response = await apiFetch('/api/ordens')
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          router.push('/login')
-          return
-        }
-        throw new Error('Erro ao carregar seus serviços')
-      }
-
+      const response = await apiFetch('/api/ordens/')
       const data = await response.json()
       const todosServicos = Array.isArray(data) ? data : (data.results || [])
       console.log('Todos os serviços carregados:', todosServicos)
@@ -110,24 +101,6 @@ export default function MeusServicos() {
     console.log('lista de serviços completa:', servicos)
     console.log('IDs disponíveis:', servicos.map(s => s.id_os))
     
-    // Teste direto da API primeiro
-    console.log('=== TESTE DIRETO DA API ===')
-    try {
-      const testResponse = await fetch(`http://127.0.0.1:8000/api/ordens/${ordemId}/`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      })
-      console.log('Teste direto - Status:', testResponse.status)
-      console.log('Teste direto - OK:', testResponse.ok)
-      const testText = await testResponse.text()
-      console.log('Teste direto - Resposta:', testText)
-    } catch (testError) {
-      console.log('Teste direto - Erro:', testError)
-    }
-    console.log('=== FIM TESTE DIRETO ===')
-    
     if (!confirm(`Tem certeza que deseja excluir permanentemente:\n\n"${servicoDescricao}"\n\nEsta ação não pode ser desfeita!`)) {
       return
     }
@@ -140,7 +113,7 @@ export default function MeusServicos() {
       console.log('Fazendo requisição DELETE para:', deleteUrl)
       console.log('URL completa:', `http://127.0.0.1:8000${deleteUrl}`)
       
-      const response = await apiFetch(`/api/ordens/${ordemId}/`, {
+      const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${ordemId}/`, {
         method: 'DELETE'
       })
 
@@ -194,27 +167,41 @@ export default function MeusServicos() {
         return
       }
 
-      // Remover a ordem da lista localmente com animação suave
-      setTimeout(() => {
-        setServicos(prev => prev.filter(servico => servico.id_os !== ordemId))
-        // Feedback de sucesso mais amigável
-        const successMsg = document.createElement('div')
-        successMsg.textContent = 'Ordem excluída com sucesso!'
-        successMsg.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: #10b981;
-          color: white;
-          padding: 1rem 1.5rem;
-          border-radius: 0.5rem;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-          z-index: 1000;
-          animation: slideIn 0.3s ease;
-        `
-        document.body.appendChild(successMsg)
-        setTimeout(() => successMsg.remove(), 3000)
+      // Remover a ordem da lista localmente imediatamente
+      setServicos(prev => prev.filter(servico => servico.id_os !== ordemId))
+      
+      // FORÇAR ATUALIZAÇÃO COMPLETA DA LISTA APÓS EXCLUSÃO
+      setTimeout(async () => {
+        try {
+          console.log('=== ATUALIZANDO LISTA APÓS EXCLUSÃO ===')
+          const refreshResponse = await apiFetch('http://127.0.0.1:8000/api/ordens/')
+          if (refreshResponse.ok) {
+            const data = await refreshResponse.json()
+            setServicos(data.results || data)
+            console.log('Lista atualizada com sucesso após exclusão')
+          }
+        } catch (refreshError) {
+          console.log('Erro ao atualizar lista após exclusão:', refreshError)
+        }
       }, 500)
+      
+      // Feedback de sucesso mais amigável
+      const successMsg = document.createElement('div')
+      successMsg.textContent = 'Ordem excluída com sucesso!'
+      successMsg.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+      `
+      document.body.appendChild(successMsg)
+      setTimeout(() => successMsg.remove(), 3000)
       
     } catch (err) {
       console.error('Erro ao excluir ordem:', err)
@@ -229,7 +216,8 @@ export default function MeusServicos() {
       <Navbar />
       <main className={styles.main}>
         <h1 className={styles.title}>Meus Serviços</h1>
-
+        
+        
         <div className={styles.content}>
           {loading && <p>Carregando seus serviços...</p>}
 

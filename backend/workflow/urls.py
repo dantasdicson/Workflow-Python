@@ -8,6 +8,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from ordens.views import OrdemDeServicoViewSet, test_auth
 from usuarios.views import UsuarioViewSet, CategoriaViewSet
 from usuarios.views import MeView
+from usuarios.auth_views import CustomTokenObtainPairView, CustomTokenRefreshView
 from .views import home
 
 router = DefaultRouter()
@@ -19,8 +20,8 @@ urlpatterns = [
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
-    path('api/auth/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/auth/refresh/', CustomTokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/me/', MeView.as_view(), name='auth_me'),
     path('api/test-auth/', test_auth, name='test_auth'),
     path('api-auth/', include('rest_framework.urls')),
