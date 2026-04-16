@@ -51,13 +51,24 @@ export default function Login() {
 
       const data = await res.json()
       
-      console.log('=== Login Debug ===')
+      console.log('=== Login Debug COMPLETO ===')
+      console.log('Status da resposta:', res.status)
       console.log('Dados recebidos:', data)
       console.log('Login successful:', data.ok)
+      console.log('Tem access?', !!data.access)
+      console.log('Tem refresh?', !!data.refresh)
+      console.log('Access token (primeiros 20 chars):', data.access ? data.access.substring(0, 20) + '...' : 'null')
+      console.log('Refresh token (primeiros 20 chars):', data.refresh ? data.refresh.substring(0, 20) + '...' : 'null')
       
-      // O backend armazena os tokens em cookies (wf_access e wf_refresh)
-      // Não precisamos armazenar no localStorage
-      console.log('Tokens armazenados em cookies pelo backend')
+      // Armazenar tokens no localStorage como fallback
+      if (data.access && data.refresh) {
+        localStorage.setItem('wf_access', data.access)
+        localStorage.setItem('wf_refresh', data.refresh)
+        console.log('✅ Tokens armazenados no localStorage como fallback')
+        console.log('Verificando se foi salvo:', localStorage.getItem('wf_access') ? 'SIM' : 'NÃO')
+      } else {
+        console.log('❌ Tokens não encontrados na resposta!')
+      }
       console.log('Login realizado com sucesso, redirecionando...')
       
       // Pequeno delay para garantir que os cookies sejam definidos

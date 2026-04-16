@@ -87,10 +87,39 @@ export default function CriarServico() {
     }
   }
 
+  const formatarComPontos = (value) => {
+    // Remove tudo que não é número
+    const numeros = value.replace(/\D/g, '')
+    
+    // Se estiver vazio, retorna vazio
+    if (!numeros) return ''
+    
+    // Converte para número
+    const numero = parseInt(numeros)
+    
+    // Formata com pontos de milhar
+    return numero.toLocaleString('pt-BR')
+  }
+
+  const converterMoedaParaNumero = (valorMoeda) => {
+    // Remove pontos e vírgulas, depois converte para número
+    const numero = valorMoeda
+      .replace(/\./g, '')
+      .replace(',', '.')
+      .trim()
+    
+    return parseFloat(numero)
+  }
+
   const handleChange = (e) => {
     const { name, value, files } = e.target
+    
     if (name === 'imagem') {
       setForm({ ...form, imagem: files[0] })
+    } else if (name === 'valor_estimado_minimo' || name === 'valor_estimado_maximo') {
+      // Formatação automática para campos monetários
+      const valorFormatado = formatarComPontos(value)
+      setForm({ ...form, [name]: valorFormatado })
     } else {
       setForm({ ...form, [name]: value })
     }
@@ -125,8 +154,17 @@ export default function CriarServico() {
       // Preparar dados para enviar
       const formData = new FormData()
       formData.append('descricao_servico', form.descricao_servico)
-      formData.append('valor_estimado_minimo', form.valor_estimado_minimo)
-      formData.append('valor_estimado_maximo', form.valor_estimado_maximo)
+      
+      // Converter valores monetários para números
+      const valorMinimo = converterMoedaParaNumero(form.valor_estimado_minimo)
+      const valorMaximo = converterMoedaParaNumero(form.valor_estimado_maximo)
+      
+      formData.append('valor_estimado_minimo', valorMinimo)
+      formData.append('valor_estimado_maximo', valorMaximo)
+      
+      console.log('Valores convertidos:')
+      console.log('Valor mínimo formatado:', form.valor_estimado_minimo, '→', valorMinimo)
+      console.log('Valor máximo formatado:', form.valor_estimado_maximo, '→', valorMaximo)
       formData.append('contratante_id', user.id_usuario) // Enviando ID do usuário como contratante
       
       if (form.imagem) {
@@ -136,7 +174,7 @@ export default function CriarServico() {
       // Enviar categorias
       if (form.categorias_necessarias && form.categorias_necessarias.length > 0) {
         form.categorias_necessarias.forEach(categoriaId => {
-          formData.append('categorias_necessarias', categoriaId)
+          formData.append('categorias_necessarias_ids', categoriaId)
         })
       }
       
@@ -165,7 +203,12 @@ export default function CriarServico() {
         return null;
       }
       
-      const token = getCookie('wf_access');
+      // Tentar pegar do cookie primeiro, depois do localStorage
+      let token = getCookie('wf_access');
+      if (!token) {
+        token = localStorage.getItem('wf_access');
+        console.log('Token encontrado no localStorage:', !!token);
+      }
       console.log('Token JWT encontrado:', !!token);
       
       const headers = {};
@@ -176,6 +219,7 @@ export default function CriarServico() {
         console.log('ERRO: Token wf_access não encontrado nos cookies');
         console.log('Cookies disponíveis:', document.cookie);
       }
+      // NÃO definir Content-Type para FormData - deixar o navegador definir automaticamente
       
       const response = await fetch('http://127.0.0.1:8000/api/ordens/', {
         method: 'POST',
@@ -190,8 +234,11 @@ export default function CriarServico() {
         console.log('Status:', response.status)
         console.log('Status Text:', response.statusText)
         
+        // Clonar response para poder ler múltiplas vezes
+        const clonedResponse = response.clone()
+        
         try {
-          const errorData = await response.json()
+          const errorData = await clonedResponse.json()
           console.log('Error Data:', JSON.stringify(errorData, null, 2))
           
           // Tentar diferentes campos de erro
@@ -292,11 +339,11 @@ export default function CriarServico() {
               Valor estimado mínimo *
               <input
                 className={styles.input}
-                type="number"
-                step="0.01"
+                type="text"
                 name="valor_estimado_minimo"
                 value={form.valor_estimado_minimo}
                 onChange={handleChange}
+                placeholder="Ex: 3500 → 3.500"
                 required
               />
             </label>
@@ -305,11 +352,11 @@ export default function CriarServico() {
               Valor estimado máximo *
               <input
                 className={styles.input}
-                type="number"
-                step="0.01"
+                type="text"
                 name="valor_estimado_maximo"
                 value={form.valor_estimado_maximo}
                 onChange={handleChange}
+                placeholder="Ex: 4000 → 4.000"
                 required
               />
             </label>

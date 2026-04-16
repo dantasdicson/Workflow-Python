@@ -28,7 +28,12 @@ export async function apiFetch(path, options = {}) {
     return null;
   }
   
-  const token = getCookie('wf_access');
+  // Tentar pegar do cookie primeiro, depois do localStorage
+  let token = getCookie('wf_access');
+  if (!token) {
+    token = localStorage.getItem('wf_access');
+    console.log('Token encontrado no localStorage:', !!token)
+  }
   console.log('Token wf_access encontrado:', !!token)
   console.log('Token (primeiros 20 chars):', token ? token.substring(0, 20) + '...' : 'null')
   console.log('Todos os cookies:', document.cookie)
@@ -37,7 +42,7 @@ export async function apiFetch(path, options = {}) {
     headers['Authorization'] = `Bearer ${token}`
     console.log('Header Authorization adicionado:', `Bearer ${token.substring(0, 20)}...`)
   } else {
-    console.log('ERRO: Token wf_access não encontrado nos cookies')
+    console.log('ERRO: Token wf_access não encontrado nos cookies nem localStorage')
   }
 
   console.log('Headers finais:', headers)
@@ -48,7 +53,18 @@ export async function apiFetch(path, options = {}) {
     credentials: 'same-origin', // Manter para compatibilidade
   }
 
+  console.log('Fazendo requisição para:', url)
+  console.log('Método:', options.method || 'GET')
+  console.log('RequestOptions:', requestOptions)
+  
   const res = await fetch(url, requestOptions)
+
+  console.log('Resposta recebida:', {
+    status: res.status,
+    statusText: res.statusText,
+    url: res.url,
+    ok: res.ok
+  })
 
   if (res.status !== 401) return res
 
