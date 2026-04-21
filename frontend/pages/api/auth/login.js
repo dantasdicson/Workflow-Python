@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   const { login, password } = req.body || {}
   if (!login || !password) {
-    return res.status(400).json({ detail: 'login e password são obrigatórios' })
+    return res.status(400).json({ detail: 'Login e senha sao obrigatorios.' })
   }
 
   const upstream = await fetch(`${API_BASE_URL}/api/auth/login/`, {
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   })
 
   if (!upstream.ok) {
-    let detail = 'Login inválido'
+    let detail = 'Nao foi possivel realizar login.'
     try {
       const data = await upstream.json()
       if (data?.detail) detail = data.detail
@@ -36,13 +36,12 @@ export default async function handler(req, res) {
   }
 
   const data = await upstream.json()
-
   const isProd = process.env.NODE_ENV === 'production'
 
   setCookie(
     res,
     serializeCookie('wf_access', data.access, {
-      httpOnly: false,  // Alterado para false para permitir acesso via JavaScript
+      httpOnly: false,
       sameSite: 'lax',
       secure: isProd,
       path: '/',
@@ -53,7 +52,7 @@ export default async function handler(req, res) {
   setCookie(
     res,
     serializeCookie('wf_refresh', data.refresh, {
-      httpOnly: false,  // Alterado para false para permitir acesso via JavaScript
+      httpOnly: false,
       sameSite: 'lax',
       secure: isProd,
       path: '/',
@@ -61,5 +60,5 @@ export default async function handler(req, res) {
     })
   )
 
-  return res.status(200).json({ ok: true })
+  return res.status(200).json({ ok: true, access: data.access, refresh: data.refresh })
 }
