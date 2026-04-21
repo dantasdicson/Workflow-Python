@@ -1,3 +1,4 @@
+from django.db.backends import ddl_references
 from fpdf import FPDF
 
 content = '''Diagramas - Workflow Python
@@ -147,3 +148,5 @@ except FileNotFoundError:
 output_path = 'diagramas_workflow_python.pdf'
 pdf.output(output_path)
 print(f'PDF criado em {output_path}')
+
+

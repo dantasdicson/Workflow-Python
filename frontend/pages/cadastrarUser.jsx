@@ -8,6 +8,17 @@ export default function CadastrarUser() {
 
   const onlyDigits = (value) => String(value || '').replace(/\D/g, '')
 
+  const getApiErrorMessage = (data) => {
+    if (!data) return null
+    if (typeof data === 'string') return data
+    if (typeof data.detail === 'string') return data.detail
+
+    const firstFieldError = Object.values(data).find((value) => Array.isArray(value) && value.length > 0)
+    if (firstFieldError) return firstFieldError.join(' ')
+
+    return null
+  }
+
   const isValidCpf = (value) => {
     const cpf = onlyDigits(value)
     if (cpf.length !== 11) return false
@@ -128,8 +139,8 @@ export default function CadastrarUser() {
       })
 
       if (!res.ok) {
-        const text = await res.text()
-        throw new Error(text || 'Erro ao cadastrar usuário')
+        const data = await res.json().catch(() => null)
+        throw new Error(getApiErrorMessage(data) || 'Erro ao cadastrar usuario')
       }
 
       router.push('/login')

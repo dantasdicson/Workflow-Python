@@ -1,0 +1,194 @@
+.main {
+  width: 100%;
+  max-width: 1100px;
+  margin: 2rem auto 0;
+  padding: 0 1.75rem;
+  box-sizing: border-box;
+}
+
+.panel {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(16px);
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kicker {
+  margin: 0 0 0.5rem;
+  color: #67e8f9;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.editButton,
+.passwordButton {
+  min-width: 92px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.editButton:hover,
+.passwordButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.passwordButton {
+  background: #0f766e;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: #f8fafc;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #111827;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.input:disabled {
+  background: rgba(229, 231, 235, 0.72);
+  color: #334155;
+}
+
+.checkboxLabel {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #f8fafc;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.checkboxLabel input {
+  width: 18px;
+  height: 18px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saveButton {
+  border: none;
+  border-radius: 8px;
+  background: #0f766e;
+  color: #ffffff;
+  padding: 0.8rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.saveButton:hover {
+  background: #115e59;
+}
+
+.saveButton:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+.message,
+.error,
+.success {
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  font-size: 0.9rem;
+}
+
+.message {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.error {
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.35);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+}
+
+.success {
+  color: #bbf7d0;
+  background: rgba(20, 83, 45, 0.35);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+}
+
+@media (max-width: 760px) {
+  .main {
+    padding: 0 1rem;
+  }
+
+  .panel {
+    padding: 1.25rem;
+  }
+
+  .headerRow {
+    flex-direction: column;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .editButton,
+  .saveButton {
+    width: 100%;
+  }
+}

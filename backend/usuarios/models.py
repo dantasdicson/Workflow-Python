@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 class Categoria(models.Model):
@@ -19,6 +20,10 @@ class UsuarioManager(BaseUserManager):
     def create_user(self, login, password=None, **extra_fields):
         if not login:
             raise ValueError('O campo login é obrigatório')
+
+        login = str(login).strip()
+        if self.model.objects.filter(login__iexact=login).exists():
+            raise ValueError('Ja existe um usuario cadastrado com esse login')
 
         extra_fields.setdefault('is_active', True)
         user = self.model(login=login, **extra_fields)
@@ -71,6 +76,9 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
         ordering = ['nome', 'sobre_nome']
+        constraints = [
+            models.UniqueConstraint(Lower('login'), name='uniq_usuario_login_ci'),
+        ]
 
     def __str__(self):
         return f"{self.nome} {self.sobre_nome}"

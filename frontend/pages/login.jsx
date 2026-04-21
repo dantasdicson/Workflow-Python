@@ -7,6 +7,7 @@ export default function Login() {
   const router = useRouter()
   const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -15,7 +16,7 @@ export default function Login() {
       try {
         const res = await fetch('/api/auth/me')
         if (res.ok) {
-          router.push('/')
+          router.push('/index')
         }
       } catch (e) {
         // não autenticado, continua na página de login
@@ -133,8 +134,8 @@ export default function Login() {
                 <label className={styles.inputLabel}>Senha</label>
                 <div className={styles.inputWrapper}>
                   <input
-                    className={styles.input}
-                    type="password"
+                    className={`${styles.input} ${styles.inputWithAction}`}
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
@@ -148,6 +149,26 @@ export default function Login() {
                       <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
                   </div>
+                  <button
+                    className={styles.passwordToggle}
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C7 20 2.73 16.89 1 12a11.2 11.2 0 0 1 5.06-5.94"/>
+                        <path d="M10.58 10.58A2 2 0 0 0 12 14a2 2 0 0 0 1.42-.58"/>
+                        <path d="M9.9 4.24A10.86 10.86 0 0 1 12 4c5 0 9.27 3.11 11 8a11.47 11.47 0 0 1-2.22 3.38"/>
+                        <path d="M1 1l22 22"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
                 </div>
               </div>
 
@@ -177,6 +198,15 @@ export default function Login() {
                 disabled={loading}
               >
                 Criar nova conta
+              </button>
+
+              <button
+                className={styles.forgotButton}
+                type="button"
+                onClick={() => router.push('/esqueciSenha')}
+                disabled={loading}
+              >
+                Esqueci minha senha
               </button>
             </form>
           </div>

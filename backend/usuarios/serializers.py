@@ -51,6 +51,19 @@ class UsuarioSerializer(serializers.ModelSerializer):
                   'categorias', 'categorias_ids', 'data_criacao', 'password']
         read_only_fields = ['id_usuario', 'data_criacao']
 
+    def validate_login(self, value):
+        login = str(value or '').strip()
+        if not login:
+            raise serializers.ValidationError('Login e obrigatorio.')
+
+        if self.instance and str(self.instance.login).lower() == login.lower():
+            return login
+
+        if Usuario.objects.filter(login__iexact=login).exists():
+            raise serializers.ValidationError('Ja existe um usuario cadastrado com esse login.')
+
+        return login
+
     def validate_cpf(self, value):
         if not _is_valid_cpf(value):
             raise serializers.ValidationError('CPF inválido.')
