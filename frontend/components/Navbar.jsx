@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Menu from './Menu'
+import BrandMark from './BrandMark'
 import styles from './Navbar.module.css'
 
 export default function Navbar() {
@@ -55,17 +56,7 @@ export default function Navbar() {
       <header className={styles.navbar}>
         <div className={styles.logoArea}>
           <div className={styles.logoContainer}>
-            <svg viewBox="0 0 32 35" width="56" height="56" className={styles.logoSvg} xmlns="http://www.w3.org/2000/svg">
-              <rect width="32" height="35" rx="7" fill="#18181b"/>
-              <path d="M4 8L10 28L16 8L22 28L28 8" stroke="url(#wgrad)" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-              <defs>
-                <linearGradient id="wgrad" x1="4" y1="8" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#f8fafc"/>
-                  <stop offset="0.5" stopColor="#cbd5e1"/>
-                  <stop offset="1" stopColor="#94a3b8"/>
-                </linearGradient>
-              </defs>
-            </svg>
+            <BrandMark />
           </div>
           <div>
             <p className={styles.subtitle}>Gerenciamento de servi&ccedil;os</p>
