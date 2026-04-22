@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/router'
+import BrandMark from '../components/BrandMark'
 import styles from '../styles/Login.module.css'
 
 export default function EsqueciSenha() {
@@ -42,15 +43,7 @@ export default function EsqueciSenha() {
           <div className={styles.loginHeader}>
             <div className={styles.logoSection}>
               <div className={styles.logo}>
-                <svg viewBox="0 0 32 35" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="32" height="35" rx="7" fill="#2563eb"/>
-                  <path d="M6 27 L10 13 L13 21 L16 13 L19 21 L22 13 L26 27"
-                        stroke="white"
-                        strokeWidth="3"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"/>
-                </svg>
+                <BrandMark />
               </div>
               <h1 className={styles.brandName}>WorkFlow</h1>
             </div>

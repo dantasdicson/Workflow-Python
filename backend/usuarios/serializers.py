@@ -50,6 +50,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
                   'data_nascimento', 'num_tel', 'whatsapp', 'cpf', 'freelancer',
                   'categorias', 'categorias_ids', 'data_criacao', 'password']
         read_only_fields = ['id_usuario', 'data_criacao']
+        extra_kwargs = {
+            'login': {'validators': []},
+            'email': {'validators': []},
+            'cpf': {'validators': []},
+        }
 
     def validate_login(self, value):
         login = str(value or '').strip()
@@ -64,10 +69,32 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
         return login
 
+    def validate_email(self, value):
+        email = str(value or '').strip()
+        if not email:
+            raise serializers.ValidationError('Email e obrigatorio.')
+
+        queryset = Usuario.objects.filter(email__iexact=email)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.exists():
+            raise serializers.ValidationError('Ja existe um usuario cadastrado com esse email.')
+
+        return email
+
     def validate_cpf(self, value):
         if not _is_valid_cpf(value):
             raise serializers.ValidationError('CPF inválido.')
-        return _only_digits(value)
+        cpf = _only_digits(value)
+        queryset = Usuario.objects.filter(cpf=cpf)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+
+        if queryset.exists():
+            raise serializers.ValidationError('Ja existe um usuario cadastrado com esse CPF.')
+
+        return cpf
 
     def validate(self, attrs):
         freelancer = attrs.get('freelancer')
