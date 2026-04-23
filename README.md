@@ -1,245 +1,439 @@
-# Workflow Python 
+# Workflow Python
 
-Sistema de gerenciamento de serviços freelancers com Django REST Framework e Next.js.
+Sistema web para gestao de ordens de servico entre contratantes e freelancers, com backend em Django REST Framework e frontend em Next.js.
 
 ![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-16.2.1-000000?style=for-the-badge&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19.2.4-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
-![JWT](https://img.shields.io/badge/JWT-5.3.1-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-5.3.1-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 
-## 📋 Sobre o Projeto
+## Visao Geral
 
-Sistema completo para gerenciamento de ordens de serviço freelancers, permitindo:
-- Cadastro de usuários (contratantes e freelancers)
-- Criação e gestão de ordens de serviço
-- Sistema de candidatura para freelancers
-- Upload de imagens para ordens
-- Autenticação JWT segura
+O projeto permite:
 
-## 🏗️ Estrutura do Projeto
+- cadastro e autenticacao de usuarios
+- alternancia entre perfil de contratante e freelancer
+- selecao de categorias de atuacao para freelancers
+- criacao, listagem e exclusao de ordens de servico
+- candidatura de freelancers em ordens abertas
+- selecao de freelancer pelo contratante
+- chat privado por ordem de servico
+- upload de imagem nas ordens
+- notificacoes ligadas a candidaturas, selecao e mensagens
+- recuperacao e troca de senha
 
-```
-Workflow-Python/
-├── backend/                 # Django REST API
-│   ├── manage.py           # Script de gerenciamento
-│   ├── workflow/           # Configurações do projeto
-│   ├── usuarios/           # App de usuários
-│   ├── ordens/            # App de ordens de serviço
-│   ├── freelancers/       # App de freelancers
-│   ├── templates/         # Templates Django
-│   ├── db.sqlite3         # Banco de dados
-│   └── requirements.txt   # Dependências Python
-│
-├── frontend/               # Next.js Application
-│   ├── pages/             # Páginas da aplicação
-│   ├── components/        # Componentes React
-│   ├── styles/           # Estilos CSS Modules
-│   ├── lib/              # Utilitários e API
-│   └── public/           # Arquivos estáticos
-│
-└── README_STRUCTURE.md    # Documentação detalhada
-```
-
-## 🛠️ Tecnologias Utilizadas
+## Stack
 
 ### Backend
-- **Django 4.2** - Framework web Python
-- **Django REST Framework 3.14.0** - API REST
-- **django-cors-headers 4.0.0** - Configuração CORS
-- **djangorestframework-simplejwt 5.3.1** - Autenticação JWT
-- **SQLite** - Banco de dados
+
+- Django 4.2
+- Django REST Framework
+- Simple JWT
+- django-filter
+- django-cors-headers
+- SQLite
 
 ### Frontend
-- **Next.js 16.2.1** - Framework React
-- **React 19.2.4** - Biblioteca UI
-- **CSS Modules** - Estilização
-- **Formidable** - Upload de arquivos
 
-## 🚀 Instalação e Execução
+- Next.js 16
+- React 19
+- CSS Modules
+- Formidable
 
-### Pré-requisitos
+## Estrutura
+
+```text
+Workflow-Python/
+|-- backend/
+|   |-- manage.py
+|   |-- workflow/
+|   |-- usuarios/
+|   |-- ordens/
+|   |-- templates/
+|   `-- requirements.txt
+|-- frontend/
+|   |-- pages/
+|   |-- components/
+|   |-- lib/
+|   |-- public/
+|   `-- styles/
+`-- README_STRUCTURE.md
+```
+
+## Funcionalidades Implementadas
+
+### Autenticacao e conta
+
+- login por `login + senha`
+- JWT com refresh token
+- cookies `httpOnly` para sessao no frontend
+- endpoint de perfil do usuario autenticado
+- troca de senha autenticada
+- recuperacao de senha por email
+- validacao de login unico, email unico e CPF unico
+
+### Perfil de usuario
+
+- cadastro de usuarios contratantes e freelancers
+- atualizacao de perfil no "Meu Painel"
+- exibicao do tipo da conta no painel
+- alteracao do modo freelancer diretamente no painel
+- selecao e persistencia de categorias ao ativar perfil freelancer
+- obrigatoriedade de pelo menos 1 categoria para usuarios freelancer
+
+### Categorias
+
+- CRUD de categorias no backend
+- listagem publica para uso em cadastro, painel e ordens
+
+### Ordens de servico
+
+- criacao de ordem autenticada
+- contratante vinculado automaticamente ao usuario logado
+- valores minimo e maximo estimados
+- vinculo de categorias necessarias
+- upload opcional de imagem
+- status:
+  - `aberta`
+  - `em_execucao`
+  - `concluido`
+- listagem com filtros
+- exclusao com regras de seguranca:
+  - somente o contratante pode excluir
+  - nao pode excluir se houver candidatos
+  - nao pode excluir em execucao ou concluida
+
+### Candidaturas
+
+- freelancers podem se candidatar apenas em ordens abertas
+- o contratante nao pode se candidatar na propria ordem
+- limite de 7 candidatos por ordem
+- notificacao para freelancer e contratante ao candidatar
+
+### Selecao de freelancer
+
+- o contratante pode escolher um freelancer candidato
+- a selecao muda a ordem para `em_execucao`
+- o freelancer escolhido vira `freelancer_selecionado`
+- os demais candidatos recebem notificacao de encerramento da candidatura
+
+### Chat por ordem de servico
+
+- cada ordem possui conversas privadas por candidato
+- durante a fase `aberta`, o contratante pode conversar separadamente com cada candidato
+- ao mudar para `em_execucao`, apenas a conversa do freelancer selecionado continua ativa
+- conversas dos nao selecionados ficam bloqueadas para novas mensagens
+- leitura e envio de mensagens por conversa
+- notificacao ao destinatario quando chega nova mensagem
+- atualizacao do chat no frontend por polling
+
+### Notificacoes
+
+- notificacoes em candidatura
+- notificacoes em selecao de freelancer
+- notificacoes em novas mensagens do chat
+
+### Frontend
+
+- login, cadastro e recuperacao de senha
+- listagem de servicos
+- pagina "Criar Servico"
+- pagina "Meus Servicos"
+- pagina "Minhas Ordens"
+- pagina "Meu Painel"
+- pagina de detalhes da ordem com:
+  - informacoes completas
+  - lista de candidatos
+  - selecao de freelancer
+  - chat privado por ordem
+
+## Regras de Negocio Importantes
+
+- apenas usuarios autenticados podem criar ordens
+- apenas freelancers podem se candidatar
+- freelancer precisa ter ao menos 1 categoria
+- apenas o contratante pode selecionar o freelancer da ordem
+- apenas participantes da ordem podem acessar o chat
+- apos a ordem entrar em execucao, apenas contratante e freelancer selecionado podem enviar mensagens
+
+## Endpoints Gerais
+
+Base do backend local:
+
+```text
+http://127.0.0.1:8000
+```
+
+### Autenticacao
+
+- `POST /api/auth/login/`
+  - autentica usuario
+  - retorna access e refresh
+  - grava cookies de sessao
+
+- `POST /api/auth/refresh/`
+  - renova o access token
+
+- `GET /api/auth/me/`
+  - retorna o usuario autenticado
+
+- `PUT /api/auth/me/`
+  - atualiza perfil do usuario autenticado
+  - permite atualizar dados pessoais, `freelancer` e `categorias_ids`
+
+- `POST /api/auth/change-password/`
+  - altera senha do usuario autenticado
+
+- `POST /api/auth/password-reset/`
+  - envia email de redefinicao de senha
+
+- `POST /api/auth/password-reset-confirm/`
+  - confirma redefinicao de senha com `uid`, `token` e `password`
+
+- `GET /api/test-auth/`
+  - endpoint de teste de autenticacao
+
+### Usuarios
+
+- `GET /api/usuarios/`
+  - lista usuarios
+
+- `POST /api/usuarios/`
+  - cria usuario
+
+- `GET /api/usuarios/{id}/`
+  - detalha usuario
+
+- `PUT /api/usuarios/{id}/`
+  - atualiza usuario
+
+- `DELETE /api/usuarios/{id}/`
+  - remove usuario
+
+Campos principais de usuario:
+
+- `login`
+- `password`
+- `nome`
+- `sobre_nome`
+- `email`
+- `data_nascimento`
+- `num_tel`
+- `whatsapp`
+- `cpf`
+- `freelancer`
+- `categorias_ids`
+
+### Categorias
+
+- `GET /api/categorias/`
+  - lista categorias
+
+- `POST /api/categorias/`
+  - cria categoria
+
+- `GET /api/categorias/{id}/`
+  - detalha categoria
+
+- `PUT /api/categorias/{id}/`
+  - atualiza categoria
+
+- `DELETE /api/categorias/{id}/`
+  - remove categoria
+
+### Ordens de servico
+
+- `GET /api/ordens/`
+  - lista ordens
+  - suporta filtros
+
+- `POST /api/ordens/`
+  - cria ordem autenticada
+
+- `GET /api/ordens/{id_os}/`
+  - detalha ordem
+
+- `PUT /api/ordens/{id_os}/`
+  - atualiza ordem
+
+- `DELETE /api/ordens/{id_os}/`
+  - exclui ordem com validacoes de permissao e status
+
+Campos principais da ordem:
+
+- `descricao_servico`
+- `valor_estimado_minimo`
+- `valor_estimado_maximo`
+- `status`
+- `imagem`
+- `categorias_necessarias_ids`
+- `contratante_id`
+- `freelancer_selecionado_id`
+
+Filtros suportados em ordens:
+
+- `contratante`
+- `freelancer_selecionado`
+- `status`
+- `candidatos`
+
+### Candidaturas e selecao
+
+- `POST /api/ordens/{id_os}/candidatar/`
+  - realiza candidatura do freelancer autenticado
+
+- `POST /api/ordens/{id_os}/selecionar-freelancer/`
+  - seleciona freelancer candidato
+  - body:
+
+```json
+{
+  "freelancer_id": 25
+}
+```
+
+### Chat da ordem
+
+- `GET /api/ordens/{id_os}/conversas/`
+  - lista conversas disponiveis para o usuario autenticado
+
+- `GET /api/ordens/{id_os}/conversas/{conversa_id}/mensagens/`
+  - lista mensagens da conversa
+
+- `POST /api/ordens/{id_os}/conversas/{conversa_id}/mensagens/`
+  - envia mensagem na conversa
+  - body:
+
+```json
+{
+  "conteudo": "Mensagem privada entre contratante e freelancer"
+}
+```
+
+## Endpoints Proxy no Frontend
+
+O frontend possui rotas intermediarias para autenticar chamadas com cookies:
+
+- `GET|POST /api/auth/me`
+- `POST /api/auth/refresh`
+- `GET /api/categorias`
+- `GET|POST /api/ordens`
+- `GET|POST|PUT|PATCH|DELETE /api/ordens-proxy?path=...`
+
+Exemplos:
+
+- `/api/ordens-proxy?path=28/`
+- `/api/ordens-proxy?path=28/conversas/`
+- `/api/ordens-proxy?path=28/conversas/1/mensagens/`
+
+## Instalacao e Execucao
+
+### Pre-requisitos
+
 - Python 3.8+
 - Node.js 18+
-- npm ou yarn
+- npm
 
-### Backend (Django)
+### Backend
 
-1. **Criar ambiente virtual:**
-```bash
-python -m venv .venv
-.venv\Scripts\activate  # Windows
-```
-
-2. **Instalar dependências:**
 ```bash
 cd backend
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-3. **Executar migrações:**
-```bash
-python manage.py makemigrations
 python manage.py migrate
-```
-
-4. **Criar superusuário (opcional):**
-```bash
-python manage.py createsuperuser
-```
-
-5. **Iniciar servidor:**
-```bash
 python manage.py runserver
 ```
 
-### Frontend (Next.js)
+### Frontend
 
-1. **Instalar dependências:**
 ```bash
 cd frontend
 npm install
-```
-
-2. **Iniciar servidor de desenvolvimento:**
-```bash
 npm run dev
 ```
 
-## 📱 Funcionalidades Implementadas
+## Variaveis e Configuracao
 
-### ✅ Concluídas
-- [x] Autenticação JWT com refresh tokens
-- [x] CRUD de usuários (contratantes/freelancers)
-- [x] CRUD de categorias
-- [x] CRUD de ordens de serviço
-- [x] Upload de imagens para ordens
-- [x] Sistema de candidatura para freelancers
-- [x] Interface responsiva com Next.js
-- [x] Listagem de ordens abertas
-- [x] Página "Meus Serviços"
-- [x] Página "Criar Serviço"
-- [x] Filtragem por status
-- [x] Validação de formulários
+### Backend
 
-### 🚧 Em Progresso
-- [ ] Sistema de mensagens entre contratante e freelancer
-- [ ] Sistema de avaliação e feedback
-- [ ] Integração com gateway de pagamento
-- [ ] Notificações por email
-- [ ] Dashboard administrativo
+Configuracoes principais em `backend/workflow/settings.py`:
 
-## 📡 APIs Disponíveis
+- `SECRET_KEY`
+- `DEBUG`
+- `ALLOWED_HOSTS`
+- `FRONTEND_BASE_URL`
+- `DEFAULT_FROM_EMAIL`
+- `EMAIL_BACKEND`
+- `EMAIL_HOST`
+- `EMAIL_PORT`
+- `EMAIL_HOST_USER`
+- `EMAIL_HOST_PASSWORD`
+- `EMAIL_USE_TLS`
 
-### Autenticação
-- `POST /api/auth/login/` - Login de usuário
-- `POST /api/auth/refresh/` - Refresh token
-- `GET /api/auth/me/` - Dados do usuário logado
+### Frontend
 
-### Usuários
-- `GET /api/usuarios/` - Listar usuários
-- `POST /api/usuarios/` - Criar usuário
-- `GET /api/usuarios/{id}/` - Detalhes do usuário
-- `PUT /api/usuarios/{id}/` - Atualizar usuário
-- `DELETE /api/usuarios/{id}/` - Deletar usuário
+Variavel usada pelos proxies:
 
-### Categorias
-- `GET /api/categorias/` - Listar categorias
-- `POST /api/categorias/` - Criar categoria
-- `GET /api/categorias/{id}/` - Detalhes da categoria
-- `PUT /api/categorias/{id}/` - Atualizar categoria
-- `DELETE /api/categorias/{id}/` - Deletar categoria
-
-**Categorias Padrão:**
-- DESENVOLVIMENTO WEB
-- DESENVOLVIMENTO MOBILE
-- EXCEL
-- PHOTOSHOP
-
-### Ordens de Serviço
-- `GET /api/ordens/` - Listar ordens (suporta filtros)
-- `POST /api/ordens/` - Criar ordem (com upload de imagem)
-- `GET /api/ordens/{id}/` - Detalhes da ordem
-- `PUT /api/ordens/{id}/` - Atualizar ordem
-- `DELETE /api/ordens/{id}/` - Deletar ordem
-
-## 🔧 Configuração
-
-### Variáveis de Ambiente (Backend)
 ```bash
-# No arquivo workflow/settings.py
-SECRET_KEY='sua-chave-secreta'
-DEBUG=True
-ALLOWED_HOSTS=['localhost', '127.0.0.1']
+NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-### Variáveis de Ambiente (Frontend)
+## Testes
+
+### Backend
+
 ```bash
-# No arquivo .env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-## 📝 Exemplos de Uso
-
-### Criar Ordem de Serviço
-```javascript
-const formData = new FormData();
-formData.append('descricao_servico', 'Desenvolvimento de site');
-formData.append('valor_estimado_minimo', '1000');
-formData.append('valor_estimado_maximo', '2000');
-formData.append('imagem', file);
-
-const response = await fetch('/api/ordens', {
-  method: 'POST',
-  body: formData,
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
-```
-
-### Login de Usuário
-```javascript
-const response = await fetch('/api/auth/login/', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    login: 'usuario',
-    password: 'senha123'
-  })
-});
-```
-
-## 🧪 Testes
-
-Para executar os testes (quando implementados):
-```bash
-# Backend
 cd backend
 python manage.py test
-
-# Frontend
-cd frontend
-npm test
 ```
 
-## 📄 Licença
+Atualmente ha testes implementados para:
 
-Este projeto está sob licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+- criacao de conversa ao candidatar
+- bloqueio de chats nao selecionados
+- permissao de mensagens apos selecao do freelancer
 
-## 🤝 Contribuição
+### Frontend
 
-Contribuições são bem-vindas! Por favor:
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+```bash
+cd frontend
+npm run lint
+```
+
+## Status Atual do Projeto
+
+### Implementado
+
+- autenticacao e sessao
+- cadastro e edicao de perfil
+- categorias para freelancers
+- ordens de servico
+- candidaturas
+- selecao de freelancer
+- chat privado por ordem
+- notificacoes
+- recuperacao de senha
+
+### Ainda nao implementado
+
+- dashboard administrativo
+- sistema de avaliacao e feedback
+- pagamentos
+- notificacoes por email transacionais completas alem da redefinicao de senha
+- websocket para chat em tempo real real-time; hoje o chat usa polling
+
+## Licenca
+
+Projeto sob licenca MIT.
 
 ## Contato
 
-**Dicson Dantas** - [WhatsApp (84) 99604-7536](https://wa.me/5584996047536) - dicsondantas@unigranrio.br
+Dicson Dantas  
+WhatsApp: [wa.me/5584996047536](https://wa.me/5584996047536)  
+Email: dicsondantas@unigranrio.br
 
-Link do Projeto: [https://github.com/dantasdicson/workflow-python](https://github.com/dantasdicson/workflow-python)
+Repositorio:
+
+https://github.com/dantasdicson/workflow-python
