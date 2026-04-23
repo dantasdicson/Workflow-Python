@@ -1,289 +1,338 @@
-from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
-from rest_framework import status
+from django.db import transaction
+from django.db.models import Count, Prefetch
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import OrdemDeServico
-from .serializers import OrdemDeServicoSerializer
+from rest_framework import status, viewsets
+from rest_framework.decorators import action, api_view
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+
+from usuarios.models import Notificacao, Usuario
 from .filters import OrdemDeServicoFilter
-from usuarios.models import Notificacao
+from .models import ConversaOrdem, MensagemChat, OrdemDeServico
+from .serializers import (
+    ConversaOrdemSerializer,
+    MensagemChatSerializer,
+    OrdemDeServicoSerializer,
+)
+
+
+def _get_authenticated_user(request):
+    if request.user.is_authenticated:
+        return request.user
+    return None
+
+
+def _ensure_order_participant(ordem, usuario):
+    if not usuario:
+        raise PermissionDenied('Autenticação obrigatória.')
+
+    participante = (
+        ordem.contratante_id == usuario.id_usuario
+        or ordem.freelancer_selecionado_id == usuario.id_usuario
+        or ordem.freelancers_candidatos.filter(id_usuario=usuario.id_usuario).exists()
+    )
+    if not participante:
+        raise PermissionDenied('Você não participa desta ordem de serviço.')
+
+
+def _ensure_conversation_access(conversa, usuario):
+    if not usuario:
+        raise PermissionDenied('Autenticação obrigatória.')
+
+    if usuario.id_usuario not in {conversa.contratante_id, conversa.freelancer_id}:
+        raise PermissionDenied('Você não tem acesso a esta conversa.')
+
+
+def _get_or_create_candidate_conversation(ordem, freelancer):
+    conversa, _ = ConversaOrdem.objects.get_or_create(
+        ordem_servico=ordem,
+        freelancer=freelancer,
+        defaults={
+            'contratante': ordem.contratante,
+            'status': 'ativa',
+            'tipo': 'candidatura',
+        },
+    )
+    return conversa
+
 
 @api_view(['GET'])
 def test_auth(request):
-    """
-    Endpoint de teste para verificar se a autenticação está funcionando
-    """
     if request.user.is_authenticated:
         return Response({
             'authenticated': True,
             'user_id': request.user.id_usuario,
             'username': request.user.login,
-            'is_freelancer': hasattr(request.user, 'freelancer')
+            'is_freelancer': getattr(request.user, 'freelancer', False),
         })
-    else:
-        return Response({
-            'authenticated': False,
-            'error': 'User not authenticated'
-        }, status=401)
+    return Response({
+        'authenticated': False,
+        'error': 'User not authenticated',
+    }, status=401)
+
 
 class OrdemDeServicoViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet para gerenciar ordens de serviço
-    """
-    permission_classes = [AllowAny]  # TEMPORÁRIO: sem autenticação
     serializer_class = OrdemDeServicoSerializer
-    queryset = OrdemDeServico.objects.select_related('contratante', 'freelancer_selecionado').prefetch_related('freelancers_candidatos', 'categorias_necessarias')
+    queryset = OrdemDeServico.objects.select_related(
+        'contratante',
+        'freelancer_selecionado',
+    ).prefetch_related(
+        'freelancers_candidatos',
+        'categorias_necessarias',
+    )
     filter_backends = [DjangoFilterBackend]
     filterset_class = OrdemDeServicoFilter
     lookup_field = 'id_os'
+    permission_classes = [AllowAny]
 
-    def dispatch(self, request, *args, **kwargs):
-        print(f"=== DISPATCH VIEWSET ===")
-        print(f"Method: {request.method}")
-        print(f"URL: {request.get_full_path()}")
-        print(f"User: {request.user}")
-        print(f"User is_authenticated: {request.user.is_authenticated}")
-        print(f"Args: {args}")
-        print(f"Kwargs: {kwargs}")
-        return super().dispatch(request, *args, **kwargs)
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), **{self.lookup_field: self.kwargs[self.lookup_field]})
 
-    @action(detail=True, methods=['post'], permission_classes=[AllowAny])
+    def create(self, request, *args, **kwargs):
+        usuario = _get_authenticated_user(request)
+        if not usuario:
+            return Response({'error': 'Autenticação obrigatória para criar ordens.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        mutable_data = request.data.copy()
+        mutable_data['contratante_id'] = usuario.id_usuario
+        serializer = self.get_serializer(data=mutable_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def candidatar(self, request, id_os=None):
-        """
-        Endpoint para freelancer se candidatar a uma ordem de serviço
-        Limite de 7 candidatos por ordem de serviço
-        """
         ordem = self.get_object()
         usuario = request.user
-        
-        # CORRIGIDO: Se não estiver autenticado, usar usuário padrão
-        if not usuario.is_authenticated:
-            from usuarios.models import Usuario
-            try:
-                usuario = Usuario.objects.get(id_usuario=20)  # Dock como usuário padrão
-                print(f"=== USUÁRIO NÃO AUTENTICADO - USANDO USUÁRIO PADRÃO: {usuario.nome} ===")
-            except Usuario.DoesNotExist:
-                return Response(
-                    {'error': 'Sistema não configurado corretamente'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
-        
-        # Verificar se usuário é freelancer
+
         if not usuario.freelancer:
             return Response(
                 {'error': 'Apenas freelancers podem se candidatar a ordens de serviço'},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
-        
-        # Verificar se ordem está aberta
+
+        if ordem.contratante_id == usuario.id_usuario:
+            return Response(
+                {'error': 'O contratante não pode se candidatar à própria ordem.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if ordem.status != 'aberta':
             return Response(
                 {'error': 'Esta ordem de serviço não está mais aberta para candidaturas'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        # Verificar se já é candidato
+
         if ordem.freelancers_candidatos.filter(id_usuario=usuario.id_usuario).exists():
             return Response(
                 {'error': 'Você já está candidatado a esta ordem de serviço'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        # Verificar se freelancer já foi selecionado
-        if ordem.freelancer_selecionado and ordem.freelancer_selecionado.id_usuario == usuario.id_usuario:
-            return Response(
-                {'error': 'Você já foi selecionado para esta ordem de serviço'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Verificar limite de 7 candidatos
-        candidatos_count = ordem.freelancers_candidatos.count()
-        print(f"=== DEBUG CANDIDATURA ===")
-        print(f"ID da Ordem: {ordem.id_os}")
-        print(f"Usuário candidatando: {usuario.id_usuario} - {usuario.nome}")
-        print(f"Candidatos atuais: {candidatos_count}")
-        print(f"Lista de candidatos atuais: {[f'{c.id_usuario}-{c.nome}' for c in ordem.freelancers_candidatos.all()]}")
-        
-        if candidatos_count >= 7:
-            print(f"ERRO: Limite de 7 candidatos atingido ({candidatos_count})")
+
+        if ordem.freelancers_candidatos.count() >= 7:
             return Response(
                 {'error': 'Esta ordem de serviço já atingiu o limite de 7 candidatos'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        # Adicionar freelancer aos candidatos
-        print(f"Adicionando usuário {usuario.id_usuario} aos candidatos...")
+
         ordem.freelancers_candidatos.add(usuario)
-        
-        # Verificar se foi adicionado
-        novos_candidatos = ordem.freelancers_candidatos.count()
-        print(f"Candidatos após adição: {novos_candidatos}")
-        print(f"Lista de candidatos após adição: {[f'{c.id_usuario}-{c.nome}' for c in ordem.freelancers_candidatos.all()]}")
-        print(f"=== FIM DEBUG CANDIDATURA ===")
-        
-        # Criar notificação para o freelancer
+        conversa = _get_or_create_candidate_conversation(ordem, usuario)
+
         Notificacao.objects.create(
             usuario=usuario,
-            titulo='Candidatura Realizada com Sucesso!',
-            mensagem=f'Você se candidatou com sucesso à Ordem de Serviço #{ordem.id_os}. Aguarde o contato do contratante.',
-            ordem_servico=ordem
+            titulo='Candidatura realizada',
+            mensagem=f'Você se candidatou à Ordem de Serviço #{ordem.id_os}.',
+            ordem_servico=ordem,
         )
-        
-        # Criar notificação para o contratante (se diferente do freelancer)
-        if ordem.contratante.id_usuario != usuario.id_usuario:
-            Notificacao.objects.create(
-                usuario=ordem.contratante,
-                titulo='Nova Candidatura Recebida',
-                mensagem=f'O freelancer {usuario.nome} {usuario.sobre_nome} se candidatou à sua Ordem de Serviço #{ordem.id_os}.',
-                ordem_servico=ordem
-            )
-        
+        Notificacao.objects.create(
+            usuario=ordem.contratante,
+            titulo='Nova candidatura recebida',
+            mensagem=f'{usuario.nome} {usuario.sobre_nome} se candidatou à Ordem de Serviço #{ordem.id_os}.',
+            ordem_servico=ordem,
+        )
+
         return Response({
-            'message': 'Candidatura realizada com sucesso!',
+            'message': 'Candidatura realizada com sucesso.',
             'ordem_id': ordem.id_os,
-            'total_candidatos': ordem.freelancers_candidatos.count()
-        }, status=status.HTTP_200_OK)
+            'conversa_id': conversa.id,
+            'total_candidatos': ordem.freelancers_candidatos.count(),
+        })
 
-    def create(self, request, *args, **kwargs):
-        """
-        Criar ordem de serviço - TEMPORÁRIO: permite criação sem autenticação
-        """
-        print(f"=== MÉTODO CREATE CHAMADO ===")
-        print(f"Request method: {request.method}")
-        print(f"Request user: {request.user}")
-        print(f"Request user type: {type(request.user)}")
-        print(f"Request user is_authenticated: {request.user.is_authenticated}")
-        print(f"Request user is_anonymous: {request.user.is_anonymous}")
-        print(f"Request user id: {getattr(request.user, 'id_usuario', 'NO_ID')}")
-        print(f"Request headers: {dict(request.headers)}")
-        print(f"Request data: {request.data}")
-        
-        # CORRIGIDO: Usar o usuário logado como contratante
-        if request.user.is_authenticated:
-            contratante_id = request.user.id_usuario
-            print(f"=== CREATE CORRIGIDO ===")
-            print(f"Usando usuário logado: {request.user.nome} (ID: {request.user.id_usuario})")
-        else:
-            # Se não estiver autenticado, usar um usuário padrão ou retornar erro
-            from usuarios.models import Usuario
-            usuario_padrao = Usuario.objects.get(id_usuario=20)  # Dock como usuário padrão
-            contratante_id = usuario_padrao.id_usuario
-            print(f"=== CREATE SEM AUTENTICAÇÃO ===")
-            print(f"Usando usuário padrão: {usuario_padrao.nome} (ID: {usuario_padrao.id_usuario})")
-        
-        # Modificar request.data para incluir o contratante_id correto
-        mutable_data = request.data.copy()
-        mutable_data['contratante_id'] = contratante_id
-        
-        print(f"Dados da requisição modificados:", mutable_data)
-        
-        try:
-            # Criar o serializer com os dados modificados
-            serializer = self.get_serializer(data=mutable_data)
-            print(f"Serializer criado: {serializer}")
-            
-            print("Validando serializer...")
-            serializer.is_valid(raise_exception=True)
-            print("Serializer validado com sucesso!")
-            
-            print("Salvando no banco...")
-            self.perform_create(serializer)
-            print("Salvo no banco com sucesso!")
-            
-            headers = self.get_success_headers(serializer.data)
-            print(f"Headers: {headers}")
-            print("Retornando response 201...")
-            
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-            
-        except Exception as e:
-            print(f"ERRO NO CREATE: {str(e)}")
-            print(f"Tipo do erro: {type(e)}")
-            import traceback
-            traceback.print_exc()
-            raise
-
-    def get_object(self):
-        """
-        Sobrescrever para adicionar logs de debug e melhorar tratamento de erro
-        """
-        pk = self.kwargs.get(self.lookup_field)
-        print(f"=== GET_OBJECT ===")
-        print(f"PK: {pk}")
-        print(f"Lookup field: {self.lookup_field}")
-        print(f"QuerySet: {self.queryset}")
-        
-        try:
-            obj = super().get_object()
-            print(f"Objeto encontrado: {obj.id_os}")
-            return obj
-        except Exception as e:
-            print(f"Erro ao buscar objeto: {str(e)}")
-            print(f"Tipo do erro: {type(e)}")
-            # Em vez de propagar o erro 404 HTML, vamos retornar um erro JSON customizado
-            from rest_framework.exceptions import NotFound
-            raise NotFound({
-                'error': 'Ordem de serviço não encontrada',
-                'detail': f'Não foi possível encontrar a ordem de serviço com ID {pk}',
-                'pk': pk,
-                'lookup_field': self.lookup_field
-            })
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Excluir uma ordem de serviço (apenas o contratante pode excluir)
-        """
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated], url_path='selecionar-freelancer')
+    def selecionar_freelancer(self, request, id_os=None):
         ordem = self.get_object()
         usuario = request.user
-        
-        # CORRIGIDO: Se não estiver autenticado, usar usuário padrão
-        if not usuario.is_authenticated:
-            from usuarios.models import Usuario
-            try:
-                usuario = Usuario.objects.get(id_usuario=20)  # Dock como usuário padrão
-                print(f"=== USUÁRIO NÃO AUTENTICADO - USANDO USUÁRIO PADRÃO: {usuario.nome} ===")
-            except Usuario.DoesNotExist:
-                return Response(
-                    {'error': 'Sistema não configurado corretamente'},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        freelancer_id = request.data.get('freelancer_id')
+
+        if ordem.contratante_id != usuario.id_usuario:
+            return Response(
+                {'error': 'Apenas o contratante pode selecionar o freelancer.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if ordem.status != 'aberta':
+            return Response(
+                {'error': 'A seleção só pode ocorrer enquanto a ordem estiver aberta.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not freelancer_id:
+            return Response({'error': 'freelancer_id é obrigatório.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        freelancer = get_object_or_404(Usuario.objects.filter(freelancer=True), id_usuario=freelancer_id)
+        if not ordem.freelancers_candidatos.filter(id_usuario=freelancer.id_usuario).exists():
+            return Response(
+                {'error': 'O freelancer selecionado precisa ser um candidato desta ordem.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        with transaction.atomic():
+            ordem.freelancer_selecionado = freelancer
+            ordem.status = 'em_execucao'
+            ordem.save(update_fields=['freelancer_selecionado', 'status'])
+
+            conversa_principal = _get_or_create_candidate_conversation(ordem, freelancer)
+            conversa_principal.tipo = 'principal'
+            conversa_principal.status = 'ativa'
+            conversa_principal.save(update_fields=['tipo', 'status', 'data_atualizacao'])
+
+            ConversaOrdem.objects.filter(ordem_servico=ordem).exclude(id=conversa_principal.id).update(status='bloqueada')
+
+            Notificacao.objects.create(
+                usuario=freelancer,
+                titulo='Você foi selecionado',
+                mensagem=f'Você foi selecionado para a Ordem de Serviço #{ordem.id_os}.',
+                ordem_servico=ordem,
+            )
+
+            outros_ids = list(
+                ordem.freelancers_candidatos.exclude(id_usuario=freelancer.id_usuario).values_list('id_usuario', flat=True)
+            )
+            for candidato_id in outros_ids:
+                Notificacao.objects.create(
+                    usuario_id=candidato_id,
+                    titulo='Candidatura encerrada',
+                    mensagem=f'A Ordem de Serviço #{ordem.id_os} entrou em andamento com outro freelancer.',
+                    ordem_servico=ordem,
                 )
-        
-        print(f"=== DEBUG EXCLUSÃO ===")
-        print(f"Ordem a ser excluída: {ordem.id_os}")
-        print(f"Usuário solicitante: {usuario.id_usuario} - {usuario.nome}")
-        print(f"Contratante da ordem: {ordem.contratante.id_usuario} - {ordem.contratante.nome}")
-        
-        # Verificar se o usuário é o contratante da ordem
-        if ordem.contratante.id_usuario != usuario.id_usuario:
-            print(f"ERRO: Usuário não é o contratante da ordem")
+
+        serializer = self.get_serializer(ordem)
+        return Response({
+            'message': 'Freelancer selecionado e chat principal ativado.',
+            'ordem': serializer.data,
+            'conversa_principal_id': conversa_principal.id,
+        })
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def conversas(self, request, id_os=None):
+        ordem = self.get_object()
+        usuario = request.user
+        _ensure_order_participant(ordem, usuario)
+
+        queryset = ConversaOrdem.objects.filter(ordem_servico=ordem).select_related(
+            'contratante',
+            'freelancer',
+        ).prefetch_related(
+            Prefetch(
+                'mensagens',
+                queryset=MensagemChat.objects.select_related('remetente').order_by('-data_envio'),
+                to_attr='mensagens_cache',
+            )
+        ).annotate(total_mensagens=Count('mensagens'))
+
+        if usuario.id_usuario != ordem.contratante_id:
+            queryset = queryset.filter(freelancer_id=usuario.id_usuario)
+
+        conversas = list(queryset)
+        for conversa in conversas:
+            mensagens = getattr(conversa, 'mensagens_cache', [])
+            conversa.ultima_mensagem_cache = mensagens[0] if mensagens else None
+
+        return Response(ConversaOrdemSerializer(conversas, many=True).data)
+
+    @action(
+        detail=True,
+        methods=['get', 'post'],
+        permission_classes=[IsAuthenticated],
+        url_path=r'conversas/(?P<conversa_id>[^/.]+)/mensagens',
+    )
+    def mensagens(self, request, id_os=None, conversa_id=None):
+        ordem = self.get_object()
+        conversa = get_object_or_404(
+            ConversaOrdem.objects.select_related('contratante', 'freelancer', 'ordem_servico'),
+            id=conversa_id,
+            ordem_servico=ordem,
+        )
+        usuario = request.user
+        _ensure_conversation_access(conversa, usuario)
+
+        if request.method == 'GET':
+            mensagens = conversa.mensagens.select_related('remetente').all()
+            conversa.mensagens.exclude(remetente=usuario, lida_em__isnull=True).update(lida_em=timezone.now())
+            return Response(MensagemChatSerializer(mensagens, many=True).data)
+
+        if conversa.status != 'ativa':
+            return Response(
+                {'error': 'Esta conversa não aceita novas mensagens.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if ordem.status == 'em_execucao' and usuario.id_usuario not in {ordem.contratante_id, ordem.freelancer_selecionado_id}:
+            return Response(
+                {'error': 'Após o início da execução, somente contratante e freelancer selecionado podem enviar mensagens.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        conteudo = (request.data.get('conteudo') or '').strip()
+        if not conteudo:
+            return Response({'error': 'conteudo é obrigatório.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        mensagem = MensagemChat.objects.create(
+            conversa=conversa,
+            remetente=usuario,
+            conteudo=conteudo,
+        )
+        conversa.ultima_mensagem_em = mensagem.data_envio
+        conversa.save(update_fields=['ultima_mensagem_em', 'data_atualizacao'])
+
+        destinatario = conversa.freelancer if usuario.id_usuario == conversa.contratante_id else conversa.contratante
+        if destinatario.id_usuario != usuario.id_usuario:
+            Notificacao.objects.create(
+                usuario=destinatario,
+                titulo=f'Nova mensagem na OS #{ordem.id_os}',
+                mensagem=conteudo[:180],
+                ordem_servico=ordem,
+            )
+
+        return Response(MensagemChatSerializer(mensagem).data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        ordem = self.get_object()
+        usuario = _get_authenticated_user(request)
+        if not usuario:
+            return Response({'error': 'Autenticação obrigatória.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if ordem.contratante_id != usuario.id_usuario:
             return Response(
                 {'error': 'Você não tem permissão para excluir esta ordem de serviço'},
-                status=status.HTTP_403_FORBIDDEN
+                status=status.HTTP_403_FORBIDDEN,
             )
-        
-        # Verificar se há candidatos (não permitir excluir se tiver candidatos)
+
         if ordem.freelancers_candidatos.exists():
-            print(f"ERRO: Ordem tem {ordem.freelancers_candidatos.count()} candidatos")
             return Response(
                 {'error': 'Não é possível excluir ordens que já possuem candidatos'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        # Verificar se está em execução ou concluída
+
         if ordem.status in ['em_execucao', 'concluido']:
-            print(f"ERRO: Ordem está com status {ordem.status}")
             return Response(
                 {'error': 'Não é possível excluir ordens em execução ou concluídas'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        print(f"Excluindo ordem {ordem.id_os}...")
+
         ordem.delete()
-        print(f"Ordem {ordem.id_os} excluída com sucesso!")
-        
-        return Response(
-            {'message': 'Ordem de serviço excluída com sucesso!'},
-            status=status.HTTP_200_OK
-        )
+        return Response({'message': 'Ordem de serviço excluída com sucesso.'}, status=status.HTTP_200_OK)

@@ -13,6 +13,8 @@ const initialForm = {
   num_tel: '',
   whatsapp: false,
   cpf: '',
+  freelancer: false,
+  categorias_ids: [],
 }
 
 const normalizeUser = (data = {}) => ({
@@ -24,6 +26,8 @@ const normalizeUser = (data = {}) => ({
   num_tel: data.num_tel || data.telefone || data.phone || '',
   whatsapp: Boolean(data.whatsapp),
   cpf: data.cpf || '',
+  freelancer: Boolean(data.freelancer),
+  categorias_ids: Array.isArray(data.categorias) ? data.categorias.map((categoria) => categoria.id) : [],
 })
 
 const getApiErrorMessage = (data) => {
@@ -44,6 +48,8 @@ export default function MeuPainel() {
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState(null)
   const [success, setSuccess] = useState(null)
+  const [categorias, setCategorias] = useState([])
+  const [loadingCategorias, setLoadingCategorias] = useState(true)
 
   useEffect(() => {
     const loadUser = async () => {
@@ -72,15 +78,59 @@ export default function MeuPainel() {
     loadUser()
   }, [router])
 
+  useEffect(() => {
+    const loadCategorias = async () => {
+      try {
+        setLoadingCategorias(true)
+        const res = await fetch('/api/categorias')
+        if (!res.ok) {
+          throw new Error('Erro ao carregar categorias.')
+        }
+
+        const data = await res.json()
+        setCategorias(Array.isArray(data) ? data : (data.results || []))
+      } catch (err) {
+        setError((prev) => prev || err.message)
+      } finally {
+        setLoadingCategorias(false)
+      }
+    }
+
+    loadCategorias()
+  }, [])
+
   const handleChange = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
-    setForm((prev) => ({ ...prev, [field]: value }))
+    setForm((prev) => {
+      const next = { ...prev, [field]: value }
+      if (field === 'freelancer' && !value) {
+        next.categorias_ids = []
+      }
+      return next
+    })
+  }
+
+  const toggleCategoria = (categoriaId) => {
+    setForm((prev) => {
+      const selected = new Set(prev.categorias_ids)
+      if (selected.has(categoriaId)) {
+        selected.delete(categoriaId)
+      } else {
+        selected.add(categoriaId)
+      }
+      return { ...prev, categorias_ids: Array.from(selected) }
+    })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
     setSuccess(null)
+
+    if (form.freelancer && form.categorias_ids.length < 1) {
+      setError('Selecione pelo menos uma categoria para atuar como freelancer.')
+      return
+    }
 
     try {
       setSaving(true)
@@ -94,6 +144,8 @@ export default function MeuPainel() {
           data_nascimento: form.data_nascimento || null,
           num_tel: form.num_tel,
           whatsapp: form.whatsapp,
+          freelancer: form.freelancer,
+          categorias_ids: form.freelancer ? form.categorias_ids : [],
         }),
       })
 
@@ -122,6 +174,12 @@ export default function MeuPainel() {
             <div>
               <p className={styles.kicker}>Meu Painel</p>
               <h1 className={styles.title}>Dados da conta</h1>
+              <div className={styles.accountTypeRow}>
+                <span className={styles.accountTypeLabel}>Tipo de conta</span>
+                <span className={`${styles.accountTypeBadge} ${form.freelancer ? styles.freelancerBadge : styles.contractorBadge}`}>
+                  {form.freelancer ? 'Freelancer' : 'Contratante'}
+                </span>
+              </div>
             </div>
             <button
               className={styles.editButton}
@@ -188,7 +246,58 @@ export default function MeuPainel() {
                   <input type="checkbox" checked={form.whatsapp} onChange={handleChange('whatsapp')} disabled={!editing || saving} />
                   Receber contato pelo WhatsApp
                 </label>
+
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={form.freelancer}
+                    onChange={handleChange('freelancer')}
+                    disabled={!editing || saving}
+                  />
+                  Atuar como freelancer na plataforma
+                </label>
               </div>
+
+              <section className={styles.categoriesPanel}>
+                <div className={styles.categoriesHeader}>
+                  <div>
+                    <h2 className={styles.categoriesTitle}>Categorias de atuação</h2>
+                    <p className={styles.categoriesText}>
+                      Ao marcar a opção de freelancer, escolha as categorias que melhor representam os serviços que você oferece.
+                    </p>
+                  </div>
+                  {form.freelancer && (
+                    <span className={styles.categoriesCount}>
+                      Selecionadas: {form.categorias_ids.length}
+                    </span>
+                  )}
+                </div>
+
+                {loadingCategorias ? (
+                  <div className={styles.message}>Carregando categorias...</div>
+                ) : form.freelancer ? (
+                  <div className={styles.categoriesGrid}>
+                    {categorias.map((categoria) => {
+                      const checked = form.categorias_ids.includes(categoria.id)
+                      return (
+                        <label key={categoria.id} className={styles.categoryOption}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleCategoria(categoria.id)}
+                            disabled={!editing || saving}
+                          />
+                          <span>{categoria.nome}</span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className={styles.categoriesText}>
+                    Ative a opção de freelancer para escolher suas categorias de atuação.
+                  </p>
+                )}
+              </section>
 
               {error && <div className={styles.error}>{error}</div>}
               {success && <div className={styles.success}>{success}</div>}

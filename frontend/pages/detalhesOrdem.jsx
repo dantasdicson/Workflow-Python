@@ -1,275 +1,236 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/router'
 import Navbar from '../components/Navbar'
-import Menu from '../components/Menu'
 import styles from '../styles/DetalhesOrdem.module.css'
-import { apiFetch } from '../lib/api'
-import { getMe } from '../lib/api'
+import { apiFetch, getMe } from '../lib/api'
+
+function getStatusLabel(status) {
+  if (status === 'aberta') return 'Aberta'
+  if (status === 'em_execucao') return 'Em andamento'
+  if (status === 'concluido') return 'Concluída'
+  return status
+}
 
 export default function DetalhesOrdem() {
   const router = useRouter()
+  const { id } = router.query
   const [ordem, setOrdem] = useState(null)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [candidatando, setCandidatando] = useState(false)
   const [mensagem, setMensagem] = useState('')
+  const [candidatando, setCandidatando] = useState(false)
+  const [selecionandoId, setSelecionandoId] = useState(null)
+  const [conversas, setConversas] = useState([])
+  const [conversaAtivaId, setConversaAtivaId] = useState(null)
+  const [mensagensChat, setMensagensChat] = useState([])
+  const [textoMensagem, setTextoMensagem] = useState('')
+  const [enviandoMensagem, setEnviandoMensagem] = useState(false)
+  const pollingRef = useRef(null)
 
   useEffect(() => {
-    // Verificação completa da URL e ID
-    console.log('=== INÍCIO DA DEPURAÇÃO ===');
-    console.log('URL atual:', window.location.href);
-    console.log('Pathname:', window.location.pathname);
-    console.log('Search:', window.location.search);
-    
-    // Pega o ID da URL
-    const urlParams = new URLSearchParams(window.location.search)
-    const id = urlParams.get('id')
-    
-    console.log('ID extraído da URL:', id);
-    console.log('Tipo do ID:', typeof id);
-    console.log('ID é nulo?', id === null);
-    console.log('ID é undefined?', id === undefined);
-    console.log('ID é string vazia?', id === '');
-    
-    if (!id) {
-      console.log('ID não encontrado na URL');
-      setError('ID da ordem não encontrado na URL')
-      setLoading(false)
-      return
-    }
+    if (!router.isReady) return
 
-    const fetchMe = async () => {
+    ;(async () => {
       try {
-        console.log('Buscando usuário logado...');
         const me = await getMe()
-        console.log('Usuário retornado:', me);
-        
-        // Exige autenticação para ver detalhes da ordem
-        if (me) {
-          console.log('Usuário logado, carregando detalhes da ordem:', id);
-          setUser(me)
-          // Carrega os detalhes apenas se estiver logado
-          carregarDetalhesOrdem(id)
-        } else {
-          console.log('Usuário não logado, redirecionando para login');
-          setError('Você precisa estar logado para ver os detalhes da ordem')
-          setLoading(false)
-          // Redireciona para login após 2 segundos
-          setTimeout(() => {
-            router.push('/login')
-          }, 2000)
+        if (!me) {
+          router.push('/login')
           return
         }
+        setUser(me)
       } catch (err) {
-        console.error('Erro ao buscar usuário:', err)
-        // Em caso de erro, redireciona para login
-        setError('Erro ao verificar autenticação. Por favor, faça login.')
+        setError('Erro ao verificar autenticação.')
         setLoading(false)
-        setTimeout(() => {
-          router.push('/login')
-        }, 2000)
+      }
+    })()
+  }, [router, router.isReady])
+
+  const carregarOrdem = useCallback(async () => {
+    const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/`)
+    if (!response.ok) {
+      throw new Error('Não foi possível carregar a ordem de serviço.')
+    }
+    const data = await response.json()
+    setOrdem(data)
+  }, [id])
+
+  const carregarConversas = useCallback(async (adjustSelection = true) => {
+    const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/conversas/`)
+    if (!response.ok) {
+      if (response.status === 403) {
+        setConversas([])
+        setConversaAtivaId(null)
         return
       }
+      throw new Error('Não foi possível carregar as conversas.')
     }
-    fetchMe()
-  }, [])
 
-  const carregarDetalhesOrdem = async (ordemId) => {
-    try {
-      console.log('Iniciando carregamento da ordem:', ordemId);
-      console.log('Tipo do ID:', typeof ordemId);
-      console.log('ID é válido?', ordemId && !isNaN(ordemId));
-      
-      const apiUrl = `http://127.0.0.1:8000/api/ordens/${ordemId}/`
-      console.log('URL completa sendo chamada:', apiUrl);
-      
-      setLoading(true)
-      try {
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          mode: 'cors',
-        })
-        
-        console.log('Response status:', response.status);
-        console.log('Response ok:', response.ok);
-        console.log('Response url:', response.url);
-        console.log('Response headers:', [...response.headers.entries()]);
-        
-        if (!response.ok) {
-          if (response.status === 404) {
-            console.log('Ordem não encontrada (404)');
-            setError('Ordem de serviço não encontrada')
-            return
-          }
-          if (response.status === 401) {
-            console.log('Não autorizado (401), redirecionando para login');
-            router.push('/login')
-            return
-          }
-          console.log('Erro na resposta:', response.status);
-          throw new Error('Erro ao carregar detalhes da ordem de serviço')
-        }
+    const data = await response.json()
+    setConversas(data)
+    if (!adjustSelection) return
 
-        const data = await response.json()
-        console.log('Dados recebidos:', data);
-        setOrdem(data)
-      } catch (fetchError) {
-        console.error('Erro no fetch:', fetchError);
-        console.error('Tipo do erro:', fetchError.name);
-        console.error('Mensagem do erro:', fetchError.message);
-        
-        if (fetchError.name === 'TypeError' && fetchError.message.includes('Failed to fetch')) {
-          setError('Erro de conexão com o servidor. Verifique se o backend está rodando.')
-        } else {
-          setError(fetchError.message || 'Erro ao carregar detalhes da ordem de serviço')
-        }
+    if (data.length === 0) {
+      setConversaAtivaId(null)
+      setMensagensChat([])
+      return
+    }
+
+    const conversaPrincipal = data.find((conversa) => conversa.tipo === 'principal')
+    const fallback = conversaPrincipal || data[0]
+    setConversaAtivaId((currentId) => {
+      const exists = data.some((conversa) => conversa.id === currentId)
+      return exists ? currentId : fallback.id
+    })
+  }, [id])
+
+  const carregarMensagens = useCallback(async (conversaId, showErrors = true) => {
+    const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/conversas/${conversaId}/mensagens/`)
+    if (!response.ok) {
+      if (showErrors) {
+        setMensagem('Não foi possível carregar as mensagens.')
       }
-    } catch (err) {
-      console.error('Erro ao carregar detalhes:', err);
-      setError(err.message)
-    } finally {
-      setLoading(false)
+      return
     }
-  }
+
+    const data = await response.json()
+    setMensagensChat(data)
+  }, [id])
+
+  const carregarTudo = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    await Promise.all([carregarOrdem(), carregarConversas(true)])
+    setLoading(false)
+  }, [carregarConversas, carregarOrdem])
+
+  useEffect(() => {
+    if (!id || !user) return
+    carregarTudo()
+  }, [id, user, carregarTudo])
+
+  useEffect(() => {
+    if (!id || !user || !conversaAtivaId) return
+
+    carregarMensagens(conversaAtivaId, false)
+    pollingRef.current = setInterval(() => {
+      carregarMensagens(conversaAtivaId, false)
+      carregarConversas(false)
+    }, 4000)
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+      }
+    }
+  }, [id, user, conversaAtivaId, carregarConversas, carregarMensagens])
 
   const handleCandidatar = async () => {
-    console.log('=== INÍCIO DA CANDIDATURA ===')
-    console.log('Usuário:', user)
-    console.log('É freelancer?', user?.freelancer)
-    console.log('Ordem:', ordem)
-    console.log('ID da ordem:', ordem?.id_os)
-    
     if (!user?.freelancer) {
-      console.log('Usuário não é freelancer ou não está logado')
-      setMensagem('Apenas freelancers podem se candidatar')
+      setMensagem('Apenas freelancers podem se candidatar.')
       return
     }
 
-    // Verificar se o usuário é o criador da ordem (não pode se candidatar à própria ordem)
-    if (ordem?.contratante?.id_usuario === user.id_usuario) {
-      console.log('Usuário é o criador da ordem - não permitido')
-      setMensagem('Você não pode se candidatar à sua própria ordem de serviço')
-      return
-    }
-
+    setCandidatando(true)
+    setMensagem('')
     try {
-      setCandidatando(true)
-      setMensagem('')
-      
-      // Primeiro, testar se a autenticação está funcionando
-      console.log('=== TESTE DE AUTENTICAÇÃO ===')
-      
-      // Verificar cookies disponíveis
-      console.log('Todos os cookies:', document.cookie)
-      
-      // Função para extrair cookie
-      function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return null;
-      }
-      
-      // CORRIGIDO: Removida verificação de token já que autenticação foi desabilitada
-      console.log('Autenticação desabilitada - prosseguindo sem token')
-      
-      // CORRIGIDO: Autenticação desabilitada - prosseguindo diretamente com candidatura
-      console.log('Autenticação desabilitada - prosseguindo com candidatura...')
-      
-      // Agora tentar a candidatura
-      const apiUrl = `http://127.0.0.1:8000/api/ordens/${ordem.id_os}/candidatar/`
-      console.log('URL da candidatura:', apiUrl)
-      
-      const response = await fetch(apiUrl, {
+      const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/candidatar/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-          // CORRIGIDO: Removido Authorization já que autenticação foi desabilitada
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({})
       })
-
-      console.log('Candidatura response status:', response.status)
-      console.log('Candidatura response ok:', response.ok)
-
+      const data = await response.json()
       if (!response.ok) {
-        console.log('Resposta não OK, status:', response.status)
-        
-        let errorMessage = `Erro ${response.status}: Não foi possível se candidatar`
-        try {
-          const errorData = await response.json()
-          console.log('Error data:', errorData)
-          errorMessage = errorData.error || errorData.detail || errorMessage
-        } catch (e) {
-          console.log('Não foi possível ler o erro como JSON')
-        }
-        
-        setMensagem(errorMessage)
+        setMensagem(data.error || 'Não foi possível se candidatar.')
         return
       }
 
-      const data = await response.json()
-      console.log('Resposta de sucesso:', data)
-      setMensagem(data.message || 'Candidatura enviada com sucesso!')
-      
-      // Recarregar os detalhes da ordem para atualizar a lista de candidatos
-      setTimeout(() => {
-        carregarDetalhesOrdem(ordem.id_os)
-      }, 1000)
-
+      setMensagem(data.message)
+      await carregarTudo()
     } catch (err) {
-      console.error('Erro na candidatura:', err)
-      console.error('Tipo do erro:', err.name)
-      console.error('Mensagem do erro:', err.message)
-      setMensagem(`Erro: ${err.message}`)
+      setMensagem('Erro ao enviar candidatura.')
     } finally {
       setCandidatando(false)
     }
   }
 
-  const isCandidato = () => {
-    if (!ordem || !user) return false
-    return ordem.freelancers_candidatos?.some(candidato => candidato.id_usuario === user.id_usuario)
+  const handleSelecionarFreelancer = async (freelancerId) => {
+    setSelecionandoId(freelancerId)
+    setMensagem('')
+    try {
+      const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/selecionar-freelancer/`, {
+        method: 'POST',
+        body: JSON.stringify({ freelancer_id: freelancerId }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setMensagem(data.error || 'Não foi possível selecionar o freelancer.')
+        return
+      }
+
+      setMensagem(data.message)
+      await carregarTudo()
+    } catch (err) {
+      setMensagem('Erro ao selecionar freelancer.')
+    } finally {
+      setSelecionandoId(null)
+    }
   }
 
-  const isSelecionado = () => {
-    if (!ordem || !user) return false
-    return ordem.freelancer_selecionado?.id_usuario === user.id_usuario
+  const handleEnviarMensagem = async (event) => {
+    event.preventDefault()
+    if (!conversaAtivaId || !textoMensagem.trim()) return
+
+    setEnviandoMensagem(true)
+    setMensagem('')
+    try {
+      const response = await apiFetch(
+        `http://127.0.0.1:8000/api/ordens/${id}/conversas/${conversaAtivaId}/mensagens/`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ conteudo: textoMensagem.trim() }),
+        }
+      )
+      const data = await response.json()
+      if (!response.ok) {
+        setMensagem(data.error || 'Não foi possível enviar a mensagem.')
+        return
+      }
+
+      setTextoMensagem('')
+      await carregarMensagens(conversaAtivaId, false)
+      await carregarConversas(false)
+    } catch (err) {
+      setMensagem('Erro ao enviar a mensagem.')
+    } finally {
+      setEnviandoMensagem(false)
+    }
   }
+
+  const isCandidato = () => {
+    if (!ordem || !user) return false
+    return ordem.freelancers_candidatos?.some((candidato) => candidato.id_usuario === user.id_usuario)
+  }
+
+  const isContratante = ordem?.contratante?.id_usuario === user?.id_usuario
+  const conversaAtiva = conversas.find((conversa) => conversa.id === conversaAtivaId) || null
+  const podeEnviarMensagem = conversaAtiva?.status === 'ativa'
 
   if (loading) {
     return (
       <div className={styles.container}>
         <Navbar />
         <main className={styles.main}>
-          <p>Carregando detalhes da ordem de serviço...</p>
+          <p>Carregando detalhes da ordem...</p>
         </main>
       </div>
     )
   }
 
-  if (error) {
+  if (error || !ordem) {
     return (
       <div className={styles.container}>
         <Navbar />
         <main className={styles.main}>
-          <p className={styles.error}>Erro: {error}</p>
-        </main>
-      </div>
-    )
-  }
-
-  if (!ordem) {
-    return (
-      <div className={styles.container}>
-        <Navbar />
-        <main className={styles.main}>
-          <p>Ordem de serviço não encontrada</p>
+          <p className={styles.error}>{error || 'Ordem de serviço não encontrada.'}</p>
         </main>
       </div>
     )
@@ -282,8 +243,7 @@ export default function DetalhesOrdem() {
         <div className={styles.ordemHeader}>
           <h1 className={styles.title}>Ordem de Serviço #{ordem.id_os}</h1>
           <span className={`${styles.status} ${styles[ordem.status]}`}>
-            {ordem.status === 'aberta' ? 'Aberta' : 
-             ordem.status === 'em_execucao' ? 'Em Execução' : 'Concluída'}
+            {getStatusLabel(ordem.status)}
           </span>
         </div>
 
@@ -297,61 +257,30 @@ export default function DetalhesOrdem() {
             <h2>Informações Detalhadas</h2>
             <div className={styles.infoGrid}>
               <div className={styles.infoItem}>
-                <span className={styles.label}>ID da Ordem:</span>
-                <span className={styles.value}>#{ordem.id_os}</span>
-              </div>
-              <div className={styles.infoItem}>
-                <span className={styles.label}>Status:</span>
-                <span className={`${styles.statusBadge} ${styles[ordem.status]}`}>
-                  {ordem.status === 'aberta' ? 'Aberta' : 
-                   ordem.status === 'em_execucao' ? 'Em Execução' : 'Concluída'}
-                </span>
-              </div>
-              <div className={styles.infoItem}>
-                <span className={styles.label}>Valor Estimado:</span>
+                <span className={styles.label}>Valor estimado</span>
                 <span className={styles.value}>
                   R$ {parseFloat(ordem.valor_estimado_minimo).toFixed(2)} - R$ {parseFloat(ordem.valor_estimado_maximo).toFixed(2)}
                 </span>
               </div>
               <div className={styles.infoItem}>
-                <span className={styles.label}>Contratante:</span>
+                <span className={styles.label}>Contratante</span>
                 <span className={styles.value}>
                   {ordem.contratante?.nome} {ordem.contratante?.sobre_nome}
                 </span>
               </div>
               <div className={styles.infoItem}>
-                <span className={styles.label}>Email do Contratante:</span>
-                <span className={styles.value}>{ordem.contratante?.email}</span>
+                <span className={styles.label}>Status</span>
+                <span className={`${styles.statusBadge} ${styles[ordem.status]}`}>{getStatusLabel(ordem.status)}</span>
               </div>
               <div className={styles.infoItem}>
-                <span className={styles.label}>Data de Criação:</span>
+                <span className={styles.label}>Criada em</span>
                 <span className={styles.value}>
-                  {new Date(ordem.data_criacao).toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
+                  {new Date(ordem.data_criacao).toLocaleString('pt-BR')}
                 </span>
               </div>
-              {ordem.data_conclusao && (
-                <div className={styles.infoItem}>
-                  <span className={styles.label}>Data de Conclusão:</span>
-                  <span className={styles.value}>
-                    {new Date(ordem.data_conclusao).toLocaleDateString('pt-BR', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
-              )}
               {ordem.freelancer_selecionado && (
                 <div className={styles.infoItem}>
-                  <span className={styles.label}>Freelancer Selecionado:</span>
+                  <span className={styles.label}>Freelancer selecionado</span>
                   <span className={styles.value}>
                     {ordem.freelancer_selecionado.nome} {ordem.freelancer_selecionado.sobre_nome}
                   </span>
@@ -359,20 +288,14 @@ export default function DetalhesOrdem() {
               )}
               {ordem.imagem && (
                 <div className={styles.infoItem}>
-                  <span className={styles.label}>Imagem:</span>
-                  <span className={styles.value}>
-                    <img 
-                      src={ordem.imagem} 
-                      alt="Imagem da ordem de serviço" 
-                      className={styles.ordemImage}
-                    />
-                  </span>
+                  <span className={styles.label}>Imagem</span>
+                  <img src={ordem.imagem} alt="Imagem da ordem de serviço" className={styles.ordemImage} />
                 </div>
               )}
             </div>
           </section>
 
-          {ordem.categorias_necessarias && ordem.categorias_necessarias.length > 0 && (
+          {ordem.categorias_necessarias?.length > 0 && (
             <section className={styles.section}>
               <h2>Categorias Necessárias</h2>
               <div className={styles.categorias}>
@@ -388,58 +311,157 @@ export default function DetalhesOrdem() {
           <section className={styles.section}>
             <h2>Candidatos ({ordem.freelancers_candidatos?.length || 0}/7)</h2>
             <div className={styles.candidatos}>
-              {ordem.freelancers_candidatos && ordem.freelancers_candidatos.length > 0 ? (
-                ordem.freelancers_candidatos.map((candidato) => (
-                  <div key={candidato.id_usuario} className={styles.candidatoCard}>
-                    <div className={styles.candidatoInfo}>
-                      <h4>{candidato.nome} {candidato.sobre_nome}</h4>
-                      <p>{candidato.email}</p>
-                      {candidato.categorias && candidato.categorias.length > 0 && (
-                        <div className={styles.candidatoCategorias}>
-                          {candidato.categorias.map((cat) => (
-                            <span key={cat.id} className={styles.categoriaPequena}>
-                              {cat.nome}
-                            </span>
-                          ))}
-                        </div>
+              {ordem.freelancers_candidatos?.length ? (
+                ordem.freelancers_candidatos.map((candidato) => {
+                  const isSelecionado = ordem.freelancer_selecionado?.id_usuario === candidato.id_usuario
+                  return (
+                    <div key={candidato.id_usuario} className={styles.candidatoCard}>
+                      <div className={styles.candidatoInfo}>
+                        <h4>{candidato.nome} {candidato.sobre_nome}</h4>
+                        <p>{candidato.email}</p>
+                        {candidato.categorias?.length > 0 && (
+                          <div className={styles.candidatoCategorias}>
+                            {candidato.categorias.map((cat) => (
+                              <span key={cat.id} className={styles.categoriaPequena}>
+                                {cat.nome}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {isContratante && ordem.status === 'aberta' && (
+                        <button
+                          className={styles.selectBtn}
+                          onClick={() => handleSelecionarFreelancer(candidato.id_usuario)}
+                          disabled={selecionandoId === candidato.id_usuario}
+                        >
+                          {selecionandoId === candidato.id_usuario
+                            ? 'Selecionando...'
+                            : isSelecionado
+                              ? 'Selecionado'
+                              : 'Selecionar para iniciar'}
+                        </button>
                       )}
                     </div>
-                  </div>
-                ))
+                  )
+                })
               ) : (
                 <p>Nenhum candidato ainda.</p>
               )}
             </div>
           </section>
 
+          <section className={styles.section}>
+            <div className={styles.chatHeader}>
+              <div>
+                <h2>Chat da Ordem</h2>
+                <p className={styles.chatDescription}>
+                  Em ordem aberta, cada candidato fala em um canal privado com o contratante. Após iniciar, só o freelancer selecionado continua enviando mensagens.
+                </p>
+              </div>
+            </div>
+
+            <div className={styles.chatLayout}>
+              <aside className={styles.chatSidebar}>
+                {conversas.length === 0 ? (
+                  <p className={styles.emptyChat}>
+                    {isContratante
+                      ? 'As conversas aparecem quando freelancers se candidatam.'
+                      : 'Sua conversa ficará disponível após a candidatura.'}
+                  </p>
+                ) : (
+                  conversas.map((conversa) => (
+                    <button
+                      key={conversa.id}
+                      className={`${styles.conversationButton} ${conversa.id === conversaAtivaId ? styles.conversationButtonActive : ''}`}
+                      onClick={() => setConversaAtivaId(conversa.id)}
+                    >
+                      <strong>
+                        {isContratante
+                          ? `${conversa.freelancer.nome} ${conversa.freelancer.sobre_nome}`
+                          : `${conversa.contratante.nome} ${conversa.contratante.sobre_nome}`}
+                      </strong>
+                      <span className={styles.conversationMeta}>
+                        {conversa.tipo === 'principal' ? 'Chat principal' : 'Chat de candidatura'} · {conversa.status}
+                      </span>
+                      {conversa.ultima_mensagem && (
+                        <span className={styles.conversationPreview}>
+                          {conversa.ultima_mensagem.conteudo}
+                        </span>
+                      )}
+                    </button>
+                  ))
+                )}
+              </aside>
+
+              <div className={styles.chatPanel}>
+                {conversaAtiva ? (
+                  <>
+                    <div className={styles.chatMessages}>
+                      {mensagensChat.length === 0 ? (
+                        <p className={styles.emptyChat}>Nenhuma mensagem ainda.</p>
+                      ) : (
+                        mensagensChat.map((item) => {
+                          const isMine = item.remetente.id_usuario === user?.id_usuario
+                          return (
+                            <div
+                              key={item.id}
+                              className={`${styles.messageBubble} ${isMine ? styles.messageMine : styles.messageTheirs}`}
+                            >
+                              <span className={styles.messageAuthor}>
+                                {item.remetente.nome} {item.remetente.sobre_nome}
+                              </span>
+                              <p>{item.conteudo}</p>
+                              <time>{new Date(item.data_envio).toLocaleString('pt-BR')}</time>
+                            </div>
+                          )
+                        })
+                      )}
+                    </div>
+
+                    <form className={styles.chatForm} onSubmit={handleEnviarMensagem}>
+                      <textarea
+                        className={styles.chatInput}
+                        value={textoMensagem}
+                        onChange={(event) => setTextoMensagem(event.target.value)}
+                        rows={3}
+                        placeholder={podeEnviarMensagem ? 'Digite sua mensagem privada...' : 'Esta conversa está bloqueada para novas mensagens.'}
+                        disabled={!podeEnviarMensagem || enviandoMensagem}
+                      />
+                      <button
+                        type="submit"
+                        className={styles.sendBtn}
+                        disabled={!podeEnviarMensagem || enviandoMensagem || !textoMensagem.trim()}
+                      >
+                        {enviandoMensagem ? 'Enviando...' : 'Enviar mensagem'}
+                      </button>
+                    </form>
+                  </>
+                ) : (
+                  <p className={styles.emptyChat}>Selecione uma conversa para visualizar as mensagens.</p>
+                )}
+              </div>
+            </div>
+          </section>
+
           {mensagem && (
-            <div className={`${styles.mensagem} ${
-              mensagem.includes('sucesso') ? styles.sucesso : styles.erro
-            }`}>
+            <div className={`${styles.mensagem} ${mensagem.toLowerCase().includes('erro') || mensagem.toLowerCase().includes('não foi') ? styles.erro : styles.sucesso}`}>
               {mensagem}
             </div>
           )}
 
-          {ordem.status === 'aberta' && user?.freelancer && (
+          {ordem.status === 'aberta' && user?.freelancer && !isContratante && (
             <div className={styles.actions}>
               {isCandidato() ? (
                 <button className={styles.candidatadoBtn} disabled>
                   Você já está candidatado
-                </button>
-              ) : isSelecionado() ? (
-                <button className={styles.selecionadoBtn} disabled>
-                  Você foi selecionado para esta ordem
                 </button>
               ) : ordem.freelancers_candidatos?.length >= 7 ? (
                 <button className={styles.limiteBtn} disabled>
                   Limite de 7 candidatos atingido
                 </button>
               ) : (
-                <button 
-                  className={styles.candidatarBtn}
-                  onClick={handleCandidatar}
-                  disabled={candidatando}
-                >
+                <button className={styles.candidatarBtn} onClick={handleCandidatar} disabled={candidatando}>
                   {candidatando ? 'Candidatando...' : 'Candidatar-se'}
                 </button>
               )}
