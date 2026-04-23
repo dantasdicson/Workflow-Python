@@ -141,6 +141,9 @@
   border-radius: 8px;
   padding: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .candidatoInfo h4 {
@@ -165,6 +168,24 @@
   display: flex;
   justify-content: center;
   margin-top: 2rem;
+}
+
+.selectBtn,
+.sendBtn {
+  background: #0f766e;
+  color: white;
+  border: none;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selectBtn:disabled,
+.sendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .candidatarBtn {
@@ -281,6 +302,133 @@
   margin-top: 2rem;
 }
 
+.chatHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.chatDescription {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.chatLayout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+}
+
+.chatSidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.conversationButton {
+  width: 100%;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.conversationButtonActive {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.conversationMeta {
+  color: #9ca3af;
+  font-size: 0.82rem;
+}
+
+.conversationPreview {
+  color: #d1d5db;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chatPanel {
+  min-height: 420px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chatMessages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.messageBubble {
+  max-width: 75%;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+}
+
+.messageBubble p {
+  margin: 0.35rem 0 0.45rem;
+}
+
+.messageBubble time {
+  color: #cbd5e1;
+  font-size: 0.75rem;
+}
+
+.messageMine {
+  align-self: flex-end;
+  background: #2563eb;
+}
+
+.messageTheirs {
+  align-self: flex-start;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.messageAuthor {
+  font-size: 0.82rem;
+  color: #d1fae5;
+}
+
+.chatForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.chatInput {
+  width: 100%;
+  resize: vertical;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(15, 23, 42, 0.65);
+  color: #ffffff;
+  padding: 0.85rem;
+}
+
+.emptyChat {
+  color: #9ca3af;
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .main {
     padding: 1rem;
@@ -306,5 +454,9 @@
   
   .actions {
     padding: 0 1rem;
+  }
+
+  .chatLayout {
+    grid-template-columns: 1fr;
   }
 }

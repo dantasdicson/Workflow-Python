@@ -41,6 +41,43 @@
   font-weight: 700;
 }
 
+.accountTypeRow {
+  margin-top: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.accountTypeLabel {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.accountTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.freelancerBadge {
+  background: rgba(20, 184, 166, 0.22);
+  border: 1px solid rgba(45, 212, 191, 0.45);
+  color: #99f6e4;
+}
+
+.contractorBadge {
+  background: rgba(59, 130, 246, 0.22);
+  border: 1px solid rgba(96, 165, 250, 0.45);
+  color: #bfdbfe;
+}
+
 .editButton,
 .passwordButton {
   min-width: 92px;
@@ -67,6 +104,63 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+.categoriesPanel {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.26);
+  padding: 1rem;
+}
+
+.categoriesHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.categoriesTitle {
+  margin: 0 0 0.35rem;
+  color: #ffffff;
+  font-size: 1.05rem;
+}
+
+.categoriesText {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.categoriesCount {
+  color: #99f6e4;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.categoriesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.categoryOption {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 48px;
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.categoryOption input {
+  width: 18px;
+  height: 18px;
 }
 
 .grid {
@@ -180,6 +274,14 @@
   }
 
   .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .categoriesHeader {
+    flex-direction: column;
+  }
+
+  .categoriesGrid {
     grid-template-columns: 1fr;
   }
 

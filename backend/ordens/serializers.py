@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import OrdemDeServico
+from .models import OrdemDeServico, ConversaOrdem, MensagemChat
 from usuarios.models import Usuario, Categoria
 from usuarios.serializers import UsuarioSerializer, CategoriaSerializer
 
@@ -55,3 +55,44 @@ class OrdemDeServicoSerializer(serializers.ModelSerializer):
         self.fields['freelancer_selecionado_id'].queryset = Usuario.objects.filter(freelancer=True)
         self.fields['freelancers_candidatos_ids'].queryset = Usuario.objects.filter(freelancer=True)
         self.fields['categorias_necessarias_ids'].queryset = Categoria.objects.all()
+
+
+class MensagemChatSerializer(serializers.ModelSerializer):
+    remetente = UsuarioSerializer(read_only=True)
+
+    class Meta:
+        model = MensagemChat
+        fields = ['id', 'conteudo', 'data_envio', 'lida_em', 'remetente']
+        read_only_fields = ['id', 'data_envio', 'lida_em', 'remetente']
+
+
+class ConversaOrdemSerializer(serializers.ModelSerializer):
+    contratante = UsuarioSerializer(read_only=True)
+    freelancer = UsuarioSerializer(read_only=True)
+    ultima_mensagem = serializers.SerializerMethodField()
+    total_mensagens = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = ConversaOrdem
+        fields = [
+            'id',
+            'ordem_servico',
+            'contratante',
+            'freelancer',
+            'status',
+            'tipo',
+            'ultima_mensagem_em',
+            'data_criacao',
+            'data_atualizacao',
+            'ultima_mensagem',
+            'total_mensagens',
+        ]
+        read_only_fields = fields
+
+    def get_ultima_mensagem(self, obj):
+        mensagem = getattr(obj, 'ultima_mensagem_cache', None)
+        if mensagem is None:
+            mensagem = obj.mensagens.select_related('remetente').order_by('-data_envio').first()
+        if not mensagem:
+            return None
+        return MensagemChatSerializer(mensagem).data

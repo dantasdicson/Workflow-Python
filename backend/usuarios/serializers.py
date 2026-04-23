@@ -100,6 +100,12 @@ class UsuarioSerializer(serializers.ModelSerializer):
         freelancer = attrs.get('freelancer')
         categorias = attrs.get('categorias')
 
+        if freelancer is None and self.instance is not None:
+            freelancer = self.instance.freelancer
+
+        if categorias is None and self.instance is not None:
+            categorias = self.instance.categorias.all()
+
         if freelancer:
             if not categorias or len(categorias) < 1:
                 raise serializers.ValidationError({'categorias_ids': 'Selecione pelo menos 1 categoria.'})
