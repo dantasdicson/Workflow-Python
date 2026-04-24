@@ -1,21 +1,31 @@
 .navbar {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  border-radius: 28px;
+  gap: 1.15rem;
+  border-radius: 30px;
   border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
-  backdrop-filter: blur(10px);
-  padding: 1.25rem 2.5rem;
+  background:
+    radial-gradient(circle at top left, rgba(45, 212, 191, 0.08), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+  backdrop-filter: blur(14px);
+  padding: 1.25rem 1.5rem 1rem;
   margin: 1.75rem;
   position: relative;
+  z-index: 50;
   width: 100%;
   max-width: 1400px;
   box-sizing: border-box;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
 }
 
-@media (min-width: 768px) {
-  .navbar {
+.topBar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+@media (min-width: 968px) {
+  .topBar {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -25,7 +35,8 @@
 .logoArea {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  min-width: 0;
 }
 
 .logoContainer {
@@ -38,6 +49,7 @@
   background: rgba(255,255,255,0.1);
   box-shadow: 0 10px 30px rgba(0,0,0,0.18);
   backdrop-filter: blur(10px);
+  flex-shrink: 0;
 }
 
 .logoSvg {
@@ -61,32 +73,182 @@
   letter-spacing: -0.025em;
 }
 
-.navbar nav {
+.rightSide {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 1.5rem;
-  color: #d1d5db;
-  font-size: 0.875rem;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.9rem;
+}
+
+.primaryNav {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .navLinks {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: center;
-  gap: 0.75rem;
-}
-
-@media (min-width: 768px) {
-  .navLinks {
-    gap: 1.5rem;
-  }
+  gap: 0.8rem 1.2rem;
 }
 
 .userRow {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 1rem;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.userIdentity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.bottomRail {
+  position: relative;
+  padding-top: 0.1rem;
+}
+
+.bottomRail::before {
+  content: '';
+  position: absolute;
+  top: -0.2rem;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+}
+
+.notificationsWrap {
+  position: relative;
+  z-index: 60;
+}
+
+.notificationsBtn {
+  position: relative;
+  height: 2rem;
+  width: 2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+}
+
+.notificationsBtn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.bellIcon {
+  width: 0.92rem;
+  height: 0.92rem;
+  display: block;
+  color: #f8fafc;
+}
+
+.notificationsBadge {
+  position: absolute;
+  top: -0.3rem;
+  right: -0.25rem;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25rem;
+}
+
+.notificationsPanel {
+  position: absolute;
+  top: calc(100% + 0.8rem);
+  right: 0;
+  width: 360px;
+  max-height: 420px;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(24, 24, 27, 0.96);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  z-index: 999;
+}
+
+.notificationsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  color: #f8fafc;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.82rem;
+}
+
+.notificationsList {
+  max-height: 340px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.notificationsEmpty {
+  margin: 0;
+  padding: 1rem;
+  color: #a1a1aa;
+  font-size: 0.9rem;
+}
+
+.notificationItem {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.notificationItem:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.notificationUnread {
+  background: rgba(15, 118, 110, 0.12);
+}
+
+.notificationRead {
+  opacity: 0.88;
+}
+
+.notificationTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.notificationMessage {
+  color: #d4d4d8;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.notificationDate {
+  color: #a1a1aa;
+  font-size: 0.75rem;
 }
 
 .navbar a {
@@ -104,7 +266,7 @@
   color: #f8fafc;
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.875rem;
@@ -124,7 +286,7 @@
   color: #fca5a5;
   border: 1px solid rgba(220, 38, 38, 0.3);
   padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.875rem;
@@ -143,4 +305,27 @@
   color: #f8fafc;
   font-weight: 500;
   font-size: 0.875rem;
+}
+
+@media (max-width: 967px) {
+  .navbar {
+    padding: 1.15rem 1rem 0.9rem;
+  }
+
+  .rightSide,
+  .primaryNav,
+  .navLinks,
+  .userRow {
+    width: 100%;
+    justify-content: flex-start;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 767px) {
+  .notificationsPanel {
+    right: auto;
+    left: 0;
+    width: min(88vw, 360px);
+  }
 }

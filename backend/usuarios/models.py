@@ -1,7 +1,22 @@
-from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.exceptions import ValidationError
+from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
+
+
+MAX_PORTFOLIO_FILE_SIZE = 5 * 1024 * 1024
+
+
+def validate_portfolio_file_size(value):
+    if value and getattr(value, 'size', 0) > MAX_PORTFOLIO_FILE_SIZE:
+        raise ValidationError('O arquivo de portfolio deve ter no maximo 5 MB.')
+
+
+def validate_avatar_file_size(value):
+    if value and getattr(value, 'size', 0) > MAX_PORTFOLIO_FILE_SIZE:
+        raise ValidationError('A foto de avatar deve ter no maximo 5 MB.')
+
 
 class Categoria(models.Model):
     id = models.AutoField(primary_key=True)
@@ -19,7 +34,7 @@ class Categoria(models.Model):
 class UsuarioManager(BaseUserManager):
     def create_user(self, login, password=None, **extra_fields):
         if not login:
-            raise ValueError('O campo login é obrigatório')
+            raise ValueError('O campo login e obrigatorio')
 
         login = str(login).strip()
         if self.model.objects.filter(login__iexact=login).exists():
@@ -73,15 +88,15 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = 'tab_usuario'
-        verbose_name = 'Usuário'
-        verbose_name_plural = 'Usuários'
+        verbose_name = 'Usuario'
+        verbose_name_plural = 'Usuarios'
         ordering = ['nome', 'sobre_nome']
         constraints = [
             models.UniqueConstraint(Lower('login'), name='uniq_usuario_login_ci'),
         ]
 
     def __str__(self):
-        return f"{self.nome} {self.sobre_nome}"
+        return f'{self.nome} {self.sobre_nome}'
 
 
 class Notificacao(models.Model):
@@ -92,10 +107,42 @@ class Notificacao(models.Model):
     lida = models.BooleanField(default=False)
     data_criacao = models.DateTimeField(auto_now_add=True)
     ordem_servico = models.ForeignKey('ordens.OrdemDeServico', on_delete=models.CASCADE, null=True, blank=True)
-    
+
     class Meta:
         db_table = 'tab_notificacao'
         ordering = ['-data_criacao']
-    
+
     def __str__(self):
-        return f"Notificação para {self.usuario.nome}: {self.titulo}"
+        return f'Notificacao para {self.usuario.nome}: {self.titulo}'
+
+
+class AnuncioServico(models.Model):
+    id = models.AutoField(primary_key=True)
+    freelancer = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='anuncio_servico')
+    titulo_profissional = models.CharField(max_length=120)
+    descricao = models.TextField()
+    habilidades = models.ManyToManyField(Categoria, related_name='anuncios_servico', blank=True)
+    foto_avatar = models.ImageField(
+        upload_to='anuncios/avatar/',
+        null=True,
+        blank=True,
+        validators=[validate_avatar_file_size],
+    )
+    portfolio_url = models.URLField(blank=True)
+    portfolio_arquivo = models.FileField(
+        upload_to='anuncios/portfolio/',
+        null=True,
+        blank=True,
+        validators=[validate_portfolio_file_size],
+    )
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'tab_anuncio_servico'
+        verbose_name = 'Anuncio de Servico'
+        verbose_name_plural = 'Anuncios de Servico'
+        ordering = ['-data_atualizacao', '-data_criacao']
+
+    def __str__(self):
+        return f'{self.titulo_profissional} - {self.freelancer.login}'

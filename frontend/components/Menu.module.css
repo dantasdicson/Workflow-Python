@@ -1,43 +1,99 @@
 .menu {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 1.75rem;
+  position: relative;
+  z-index: 10;
+}
+
+.menuIntegrated {
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 .menuContainer {
   display: flex;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.35rem;
   justify-content: center;
-  background: rgba(255,255,255,0.10);
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.1);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.25);
-  padding: 0.75rem;
-  max-width: 800px;
+  padding: 0;
+  max-width: 100%;
   margin: 0 auto;
 }
 
+.menuContainerIntegrated {
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0.2rem 0 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 .menuButton {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 10px;
+  position: relative;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(241, 245, 249, 0.7);
+  padding: 0.8rem 1rem 0.95rem;
+  border-radius: 0;
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  transition: all 0.25s ease;
+  white-space: nowrap;
 }
 
 .menuButton:hover {
-  background: rgba(255,255,255,0.2);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+  transform: none;
+  box-shadow: none;
 }
 
 .menuButton:active {
   transform: translateY(0);
+}
+
+.menuButtonActive {
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0));
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.menuButtonActive::after {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 0.42rem;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(103, 232, 249, 0.15), #67e8f9, rgba(45, 212, 191, 0.15));
+}
+
+.menuButtonActive::before {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: 0.32rem;
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 50%;
+  background: #67e8f9;
+  box-shadow: 0 0 14px rgba(103, 232, 249, 0.4);
+}
+
+@media (max-width: 767px) {
+  .menuContainer,
+  .menuContainerIntegrated {
+    justify-content: stretch;
+  }
+
+  .menuButton {
+    width: 100%;
+    text-align: center;
+  }
 }
