@@ -4,6 +4,10 @@ import Navbar from '../components/Navbar'
 import styles from '../styles/DetalhesOrdem.module.css'
 import { apiFetch, getMe } from '../lib/api'
 
+function buildOrdensProxyPath(path) {
+  return `/api/ordens-proxy?path=${encodeURIComponent(path)}`
+}
+
 function getStatusLabel(status) {
   if (status === 'aberta') return 'Aberta'
   if (status === 'em_execucao') return 'Em andamento'
@@ -47,7 +51,7 @@ export default function DetalhesOrdem() {
   }, [router, router.isReady])
 
   const carregarOrdem = useCallback(async () => {
-    const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/`)
+    const response = await fetch(buildOrdensProxyPath(`${id}/`))
     if (!response.ok) {
       throw new Error('Não foi possível carregar a ordem de serviço.')
     }
@@ -56,7 +60,7 @@ export default function DetalhesOrdem() {
   }, [id])
 
   const carregarConversas = useCallback(async (adjustSelection = true) => {
-    const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/conversas/`)
+    const response = await apiFetch(buildOrdensProxyPath(`${id}/conversas/`))
     if (!response.ok) {
       if (response.status === 403) {
         setConversas([])
@@ -85,7 +89,7 @@ export default function DetalhesOrdem() {
   }, [id])
 
   const carregarMensagens = useCallback(async (conversaId, showErrors = true) => {
-    const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/conversas/${conversaId}/mensagens/`)
+    const response = await apiFetch(buildOrdensProxyPath(`${id}/conversas/${conversaId}/mensagens/`))
     if (!response.ok) {
       if (showErrors) {
         setMensagem('Não foi possível carregar as mensagens.')
@@ -100,7 +104,21 @@ export default function DetalhesOrdem() {
   const carregarTudo = useCallback(async () => {
     setLoading(true)
     setError(null)
-    await Promise.all([carregarOrdem(), carregarConversas(true)])
+
+    try {
+      await carregarOrdem()
+    } catch (err) {
+      setError(err.message)
+      setLoading(false)
+      return
+    }
+
+    try {
+      await carregarConversas(true)
+    } catch (err) {
+      setMensagem('A ordem foi carregada, mas o chat nao pode ser inicializado agora.')
+    }
+
     setLoading(false)
   }, [carregarConversas, carregarOrdem])
 
@@ -134,7 +152,7 @@ export default function DetalhesOrdem() {
     setCandidatando(true)
     setMensagem('')
     try {
-      const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/candidatar/`, {
+      const response = await apiFetch(buildOrdensProxyPath(`${id}/candidatar/`), {
         method: 'POST',
       })
       const data = await response.json()
@@ -156,7 +174,7 @@ export default function DetalhesOrdem() {
     setSelecionandoId(freelancerId)
     setMensagem('')
     try {
-      const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${id}/selecionar-freelancer/`, {
+      const response = await apiFetch(buildOrdensProxyPath(`${id}/selecionar-freelancer/`), {
         method: 'POST',
         body: JSON.stringify({ freelancer_id: freelancerId }),
       })
@@ -183,7 +201,7 @@ export default function DetalhesOrdem() {
     setMensagem('')
     try {
       const response = await apiFetch(
-        `http://127.0.0.1:8000/api/ordens/${id}/conversas/${conversaAtivaId}/mensagens/`,
+        buildOrdensProxyPath(`${id}/conversas/${conversaAtivaId}/mensagens/`),
         {
           method: 'POST',
           body: JSON.stringify({ conteudo: textoMensagem.trim() }),
