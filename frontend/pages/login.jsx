@@ -186,7 +186,7 @@ export default function Login() {
               <button
                 className={styles.registerButton}
                 type="button"
-                onClick={() => router.push('/cadastrarUser')}
+                    onClick={() => router.push('/cadastrarUsuario')}
                 disabled={loading}
               >
                 Criar nova conta

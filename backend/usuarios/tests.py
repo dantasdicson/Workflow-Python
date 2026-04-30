@@ -34,12 +34,12 @@ class AnuncioServicoTests(TestCase):
             'titulo_profissional': 'Tecnico de Refrigeracao',
             'descricao': 'Instalacao, manutencao e diagnostico em sistemas residenciais.',
             'portfolio_url': 'https://portfolio.exemplo.com/refrigeracao',
-            'habilidades_ids': [self.categoria.id],
+            'categorias_ids': [self.categoria.id],
         }, format='multipart')
 
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['titulo_profissional'], 'Tecnico de Refrigeracao')
-        self.assertEqual(len(response.data['habilidades']), 1)
+        self.assertEqual(len(response.data['categorias']), 1)
 
     def test_usuario_nao_freelancer_nao_cria_anuncio(self):
         self.client.force_authenticate(user=self.contratante)

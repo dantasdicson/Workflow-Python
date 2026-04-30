@@ -52,7 +52,7 @@ export default function ListagemContratantes() {
           <p className={styles.kicker}>Freelancers Disponiveis na plataforma</p>
           <h1 className={styles.title}>Freelancers Disponiveis na plataforma</h1>
           <p className={styles.subtitle}>
-            Veja os anuncios criados pelos freelancers da plataforma, confira habilidades, portfolio e escolha quem faz sentido para a sua demanda.
+            Veja os anuncios criados pelos freelancers da plataforma, confira categorias, portfolio e escolha quem faz sentido para a sua demanda.
           </p>
         </section>
 
@@ -96,14 +96,14 @@ export default function ListagemContratantes() {
                     <p className={styles.description}>{anuncio.descricao}</p>
 
                     <div className={styles.tags}>
-                      {Array.isArray(anuncio.habilidades) && anuncio.habilidades.length > 0 ? (
-                        anuncio.habilidades.map((habilidade) => (
-                          <span key={habilidade.id} className={styles.tag}>
-                            {habilidade.nome}
+                      {Array.isArray(anuncio.categorias) && anuncio.categorias.length > 0 ? (
+                        anuncio.categorias.map((categoria) => (
+                          <span key={categoria.id} className={styles.tag}>
+                            {categoria.nome}
                           </span>
                         ))
                       ) : (
-                        <span className={styles.tagMuted}>Sem habilidades informadas</span>
+                        <span className={styles.tagMuted}>Sem categorias informadas</span>
                       )}
                     </div>
 

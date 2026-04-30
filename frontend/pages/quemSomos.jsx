@@ -14,7 +14,7 @@ export default function QuemSomos() {
               <h2 className={styles.subtitle}>Sobre o Workflow</h2>
               <p className={styles.description}>
                 O Workflow é uma plataforma que conecta empresas e freelancers de forma prática. 
-                Nela, profissionais podem se cadastrar, mostrar suas habilidades e se preparar para realizar serviços.
+                Nela, profissionais podem se cadastrar, mostrar suas categorias e se preparar para realizar serviços.
               </p>
               
               <p className={styles.description}>

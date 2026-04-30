@@ -121,7 +121,7 @@ class AnuncioServico(models.Model):
     freelancer = models.OneToOneField(Usuario, on_delete=models.CASCADE, related_name='anuncio_servico')
     titulo_profissional = models.CharField(max_length=120)
     descricao = models.TextField()
-    habilidades = models.ManyToManyField(Categoria, related_name='anuncios_servico', blank=True)
+    categorias = models.ManyToManyField(Categoria, related_name='anuncios_servico', blank=True)
     foto_avatar = models.ImageField(
         upload_to='anuncios/avatar/',
         null=True,

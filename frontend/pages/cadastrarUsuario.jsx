@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 import Navbar from '../components/Navbar'
-import styles from '../styles/CadastrarUser.module.css'
+import styles from '../styles/CadastrarUsuario.module.css'
 
-export default function CadastrarUser() {
+export default function CadastrarUsuario() {
   const router = useRouter()
 
   const onlyDigits = (value) => String(value || '').replace(/\D/g, '')
@@ -159,7 +159,7 @@ export default function CadastrarUser() {
           <section className={styles.panelLeft}>
             <h1 className={styles.title}>Criar conta</h1>
             <p className={styles.subtitle}>
-              Preencha seus dados. Se você for Freelancer, selecione pelo menos 1 habilidade.
+              Preencha seus dados. Se você for Freelancer, selecione pelo menos 1 categoria.
             </p>
           </section>
 

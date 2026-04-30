@@ -8,7 +8,7 @@ import styles from '../styles/AnuncioServico.module.css'
 const initialForm = {
   titulo_profissional: '',
   descricao: '',
-  habilidades_ids: [],
+  categorias_ids: [],
   foto_avatar: null,
   portfolio_url: '',
   portfolio_arquivo: null,
@@ -63,7 +63,7 @@ export default function AnuncioServico() {
           setForm({
             titulo_profissional: anuncioData.titulo_profissional || '',
             descricao: anuncioData.descricao || '',
-            habilidades_ids: Array.isArray(anuncioData.habilidades) ? anuncioData.habilidades.map((item) => item.id) : [],
+            categorias_ids: Array.isArray(anuncioData.categorias) ? anuncioData.categorias.map((item) => item.id) : [],
             foto_avatar: null,
             portfolio_url: anuncioData.portfolio_url || '',
             portfolio_arquivo: null,
@@ -94,13 +94,13 @@ export default function AnuncioServico() {
 
   const toggleCategoria = (categoriaId) => {
     setForm((prev) => {
-      const selected = new Set(prev.habilidades_ids)
+      const selected = new Set(prev.categorias_ids)
       if (selected.has(categoriaId)) {
         selected.delete(categoriaId)
       } else {
         selected.add(categoriaId)
       }
-      return { ...prev, habilidades_ids: Array.from(selected) }
+      return { ...prev, categorias_ids: Array.from(selected) }
     })
   }
 
@@ -126,7 +126,7 @@ export default function AnuncioServico() {
       body.append('titulo_profissional', form.titulo_profissional)
       body.append('descricao', form.descricao)
       body.append('portfolio_url', form.portfolio_url)
-      form.habilidades_ids.forEach((id) => body.append('habilidades_ids', String(id)))
+      form.categorias_ids.forEach((id) => body.append('categorias_ids', String(id)))
       if (form.foto_avatar) {
         body.append('foto_avatar', form.foto_avatar)
       }
@@ -150,7 +150,7 @@ export default function AnuncioServico() {
         ...prev,
         foto_avatar: null,
         portfolio_arquivo: null,
-        habilidades_ids: Array.isArray(data.habilidades) ? data.habilidades.map((item) => item.id) : prev.habilidades_ids,
+        categorias_ids: Array.isArray(data.categorias) ? data.categorias.map((item) => item.id) : prev.categorias_ids,
       }))
       setAvatarPreview(data.foto_avatar_url || null)
       setSuccess(anuncioAtual ? 'Anuncio atualizado com sucesso.' : 'Anuncio publicado com sucesso.')
@@ -171,7 +171,7 @@ export default function AnuncioServico() {
               <p className={styles.kicker}>Meu Portfólio</p>
               <h1 className={styles.title}>Divulgue seu trabalho como freelancer</h1>
               <p className={styles.subtitle}>
-                Monte seu anuncio profissional com titulo, bio, habilidades e portfolio para apresentar seu servico na plataforma.
+                Monte seu anuncio profissional com titulo, bio, categorias e portfolio para apresentar seu servico na plataforma.
               </p>
             </div>
             {user?.freelancer && (
@@ -235,12 +235,12 @@ export default function AnuncioServico() {
                 <section className={styles.sectionCard}>
                   <div className={styles.sectionHeader}>
                     <div>
-                      <h2 className={styles.sectionTitle}>Habilidades</h2>
+                      <h2 className={styles.sectionTitle}>Categorias</h2>
                       <p className={styles.sectionText}>
                         Selecione as categorias ja cadastradas que representam seu servico.
                       </p>
                     </div>
-                    <span className={styles.countBadge}>{form.habilidades_ids.length} selecionadas</span>
+                    <span className={styles.countBadge}>{form.categorias_ids.length} selecionadas</span>
                   </div>
 
                   <div className={styles.categoriesGrid}>
@@ -248,7 +248,7 @@ export default function AnuncioServico() {
                       <label key={categoria.id} className={styles.categoryOption}>
                         <input
                           type="checkbox"
-                          checked={form.habilidades_ids.includes(categoria.id)}
+                          checked={form.categorias_ids.includes(categoria.id)}
                           onChange={() => toggleCategoria(categoria.id)}
                         />
                         <span>{categoria.nome}</span>
@@ -353,16 +353,16 @@ export default function AnuncioServico() {
                   {form.descricao || 'Sua bio vai aparecer aqui para apresentar experiencia, especialidades e diferencial.'}
                 </p>
                 <div className={styles.previewTags}>
-                  {form.habilidades_ids.length > 0 ? (
+                  {form.categorias_ids.length > 0 ? (
                     categorias
-                      .filter((categoria) => form.habilidades_ids.includes(categoria.id))
+                      .filter((categoria) => form.categorias_ids.includes(categoria.id))
                       .map((categoria) => (
                         <span key={categoria.id} className={styles.tag}>
                           {categoria.nome}
                         </span>
                       ))
                   ) : (
-                    <span className={styles.tagMuted}>Selecione habilidades para montar o cartao.</span>
+                    <span className={styles.tagMuted}>Selecione categorias para montar o cartao.</span>
                   )}
                 </div>
               </section>

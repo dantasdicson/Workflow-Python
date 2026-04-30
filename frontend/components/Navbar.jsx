@@ -13,7 +13,7 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const notificationsRef = useRef(null)
-  const hideMenuRoutes = ['/cadastrarUser', '/cadastrarUsuario']
+const hideMenuRoutes = ['/cadastrarUsuario']
   const currentPath = router.asPath.split('?')[0]
   const isHomePage = currentPath === '/index' || router.pathname === '/'
   const showMenu = !hideMenuRoutes.includes(router.pathname) && (!isHomePage || Boolean(user))

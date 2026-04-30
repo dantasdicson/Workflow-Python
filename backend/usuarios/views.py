@@ -38,6 +38,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = None
 
     def get_permissions(self):
         if getattr(self, 'action', None) in {'list', 'retrieve'}:
@@ -46,7 +47,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
 
 
 class AnuncioServicoViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = AnuncioServico.objects.select_related('freelancer').prefetch_related('habilidades')
+    queryset = AnuncioServico.objects.select_related('freelancer').prefetch_related('categorias')
     serializer_class = AnuncioServicoSerializer
     permission_classes = [AllowAny]
     pagination_class = None

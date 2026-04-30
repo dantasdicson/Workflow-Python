@@ -31,5 +31,5 @@ class AnuncioServicoAdmin(admin.ModelAdmin):
     list_display = ('id', 'titulo_profissional', 'freelancer', 'data_criacao', 'data_atualizacao')
     list_filter = ('data_criacao', 'data_atualizacao')
     search_fields = ('titulo_profissional', 'descricao', 'freelancer__login', 'freelancer__nome')
-    filter_horizontal = ('habilidades',)
+    filter_horizontal = ('categorias',)
     ordering = ('-data_atualizacao',)

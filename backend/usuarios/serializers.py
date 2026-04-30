@@ -167,13 +167,13 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
 class AnuncioServicoSerializer(serializers.ModelSerializer):
     freelancer = UsuarioSerializer(read_only=True)
-    habilidades = CategoriaSerializer(many=True, read_only=True)
-    habilidades_ids = serializers.PrimaryKeyRelatedField(
+    categorias = CategoriaSerializer(many=True, read_only=True)
+    categorias_ids = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.all(),
         many=True,
         write_only=True,
         required=False,
-        source='habilidades',
+        source='categorias',
     )
     foto_avatar_url = serializers.SerializerMethodField()
     portfolio_arquivo_url = serializers.SerializerMethodField()
@@ -185,8 +185,8 @@ class AnuncioServicoSerializer(serializers.ModelSerializer):
             'freelancer',
             'titulo_profissional',
             'descricao',
-            'habilidades',
-            'habilidades_ids',
+            'categorias',
+            'categorias_ids',
             'foto_avatar',
             'foto_avatar_url',
             'portfolio_url',
@@ -234,19 +234,19 @@ class AnuncioServicoSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        habilidades = validated_data.pop('habilidades', [])
+        categorias = validated_data.pop('categorias', [])
         anuncio = AnuncioServico.objects.create(**validated_data)
-        anuncio.habilidades.set(habilidades)
+        anuncio.categorias.set(categorias)
         return anuncio
 
     def update(self, instance, validated_data):
-        habilidades = validated_data.pop('habilidades', None)
+        categorias = validated_data.pop('categorias', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
-        if habilidades is not None:
-            instance.habilidades.set(habilidades)
+        if categorias is not None:
+            instance.categorias.set(categorias)
 
         return instance
