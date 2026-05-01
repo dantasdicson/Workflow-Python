@@ -1,13 +1,21 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from usuarios.models import Usuario, Categoria
+from django.utils import timezone
+
+from usuarios.models import Categoria, Usuario
+
 
 class OrdemDeServico(models.Model):
+    STATUS_ABERTA = 'aberta'
+    STATUS_EM_EXECUCAO = 'em_execucao'
+    STATUS_FINALIZADO = 'finalizado'
+
     STATUS_CHOICES = [
-        ('aberta', 'Aberta'),
-        ('em_execucao', 'Em Execução'),
-        ('concluido', 'Concluído'),
+        (STATUS_ABERTA, 'Aberta'),
+        (STATUS_EM_EXECUCAO, 'Em execucao'),
+        (STATUS_FINALIZADO, 'Finalizado'),
     ]
-    
+
     id_os = models.AutoField(primary_key=True)
     contratante = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='ordens_contratadas')
     freelancer_selecionado = models.ForeignKey(Usuario, on_delete=models.SET_NULL, null=True, blank=True, related_name='ordens_selecionadas')
@@ -16,14 +24,27 @@ class OrdemDeServico(models.Model):
     valor_estimado_minimo = models.DecimalField(max_digits=10, decimal_places=2)
     valor_estimado_maximo = models.DecimalField(max_digits=10, decimal_places=2)
     categorias_necessarias = models.ManyToManyField(Categoria, related_name='ordens', blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aberta')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_ABERTA)
     imagem = models.ImageField(upload_to='ordens/', null=True, blank=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
     data_conclusao = models.DateTimeField(null=True, blank=True)
-    
+
     def __str__(self):
         return f"OS #{self.id_os} - {self.descricao_servico[:50]}"
-    
+
+    def pode_receber_candidaturas(self):
+        return self.status == self.STATUS_ABERTA
+
+    def selecionar_freelancer(self, freelancer):
+        self.freelancer_selecionado = freelancer
+        self.status = self.STATUS_EM_EXECUCAO
+        self.save(update_fields=['freelancer_selecionado', 'status'])
+
+    def finalizar(self):
+        self.status = self.STATUS_FINALIZADO
+        self.data_conclusao = timezone.now()
+        self.save(update_fields=['status', 'data_conclusao'])
+
     class Meta:
         db_table = 'tab_ordem_servico'
         ordering = ['-data_criacao']
@@ -79,3 +100,63 @@ class MensagemChat(models.Model):
 
     def __str__(self):
         return f"Mensagem #{self.id} - Conversa #{self.conversa_id}"
+
+
+class AvaliacaoOrdem(models.Model):
+    AVALIADOR_CONTRATANTE = 'contratante'
+    AVALIADOR_FREELANCER = 'freelancer'
+
+    AVALIADOR_TIPO_CHOICES = [
+        (AVALIADOR_CONTRATANTE, 'Contratante'),
+        (AVALIADOR_FREELANCER, 'Freelancer'),
+    ]
+
+    id = models.AutoField(primary_key=True)
+    ordem_servico = models.ForeignKey(OrdemDeServico, on_delete=models.CASCADE, related_name='avaliacoes')
+    avaliador = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='avaliacoes_feitas')
+    avaliado = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='avaliacoes_recebidas')
+    avaliador_tipo = models.CharField(max_length=20, choices=AVALIADOR_TIPO_CHOICES)
+    nota_profissional = models.PositiveSmallIntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
+    nota_plataforma = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+    )
+    comentario = models.TextField(blank=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'tab_avaliacao_ordem'
+        ordering = ['-data_criacao']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ordem_servico', 'avaliador'],
+                name='uniq_avaliacao_ordem_avaliador',
+            ),
+        ]
+
+    def __str__(self):
+        return f"Avaliacao OS #{self.ordem_servico_id} por #{self.avaliador_id}"
+
+    def save(self, *args, **kwargs):
+        avaliado_anterior_id = None
+        if self.pk:
+            avaliado_anterior_id = (
+                AvaliacaoOrdem.objects
+                .filter(pk=self.pk)
+                .values_list('avaliado_id', flat=True)
+                .first()
+            )
+
+        super().save(*args, **kwargs)
+        self.avaliado.recalcular_avaliacao()
+
+        if avaliado_anterior_id and avaliado_anterior_id != self.avaliado_id:
+            Usuario.objects.get(pk=avaliado_anterior_id).recalcular_avaliacao()
+
+    def delete(self, *args, **kwargs):
+        avaliado = self.avaliado
+        resultado = super().delete(*args, **kwargs)
+        avaliado.recalcular_avaliacao()
+        return resultado

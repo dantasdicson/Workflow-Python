@@ -79,7 +79,7 @@ export default function MinhasOrdens() {
         return styles.statusAberta
       case 'em_execucao':
         return styles.statusExecucao
-      case 'concluida':
+      case 'finalizado':
         return styles.statusConcluida
       default:
         return styles.statusDefault
@@ -92,8 +92,8 @@ export default function MinhasOrdens() {
         return 'Aberta'
       case 'em_execucao':
         return 'Em Execução'
-      case 'concluida':
-        return 'Concluída'
+      case 'finalizado':
+        return 'Finalizado'
       default:
         return status
     }
@@ -147,11 +147,29 @@ export default function MinhasOrdens() {
                       <p><strong>Data de criação:</strong> {new Date(ordem.data_criacao).toLocaleDateString('pt-BR')}</p>
                       
                       {ordem.contratante && (
-                        <p><strong>Contratante:</strong> {ordem.contratante.nome}</p>
+                        <p>
+                          <strong>Contratante:</strong>{' '}
+                          <button
+                            type="button"
+                            className={styles.profileLink}
+                            onClick={() => router.push(`/perfilUsuario?id=${ordem.contratante.id_usuario}`)}
+                          >
+                            {ordem.contratante.nome}
+                          </button>
+                        </p>
                       )}
                       
                       {ordem.freelancer_selecionado && (
-                        <p><strong>Freelancer:</strong> {ordem.freelancer_selecionado.nome}</p>
+                        <p>
+                          <strong>Freelancer:</strong>{' '}
+                          <button
+                            type="button"
+                            className={styles.profileLink}
+                            onClick={() => router.push(`/perfilUsuario?id=${ordem.freelancer_selecionado.id_usuario}`)}
+                          >
+                            {ordem.freelancer_selecionado.nome}
+                          </button>
+                        </p>
                       )}
                       
                       <p><strong>Candidatos:</strong> {ordem.freelancers_candidatos?.length || 0}/7</p>

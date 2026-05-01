@@ -25,6 +25,36 @@
   margin-bottom: 1.5rem;
 }
 
+.profileSummary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.avatarBox {
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.25), rgba(37, 99, 235, 0.25));
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  color: #f8fafc;
+  font-size: 2rem;
+  font-weight: 850;
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background-position: center;
+  background-size: cover;
+}
+
 .kicker {
   margin: 0 0 0.5rem;
   color: #67e8f9;
@@ -64,6 +94,19 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.ratingBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  border-radius: 8px;
+  padding: 0.35rem 0.8rem;
+  background: rgba(250, 204, 21, 0.14);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  color: #fde68a;
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .freelancerBadge {
@@ -270,6 +313,11 @@
   }
 
   .headerRow {
+    flex-direction: column;
+  }
+
+  .profileSummary {
+    align-items: flex-start;
     flex-direction: column;
   }
 

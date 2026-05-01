@@ -47,7 +47,7 @@
   color: white;
 }
 
-.concluido {
+.finalizado {
   background: #6b7280;
   color: white;
 }
@@ -99,6 +99,25 @@
   font-size: 1rem;
 }
 
+.profileLink,
+.candidatoName {
+  width: fit-content;
+  border: none;
+  background: transparent;
+  color: #99f6e4;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0;
+  text-align: left;
+}
+
+.profileLink:hover,
+.candidatoName:hover {
+  color: #ccfbf1;
+  text-decoration: underline;
+}
+
 .categorias {
   display: flex;
   flex-wrap: wrap;
@@ -146,10 +165,31 @@
   gap: 1rem;
 }
 
-.candidatoInfo h4 {
+.candidatoInfo h4,
+.candidatoName {
   color: #ffffff;
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
+}
+
+.candidatoName {
+  color: #99f6e4;
+}
+
+.profileButton {
+  width: fit-content;
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  border-radius: 8px;
+  background: rgba(20, 184, 166, 0.14);
+  color: #ccfbf1;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0.45rem 0.7rem;
+}
+
+.profileButton:hover {
+  background: rgba(20, 184, 166, 0.24);
 }
 
 .candidatoInfo p {
@@ -282,7 +322,7 @@
   color: white;
 }
 
-.concluido {
+.finalizado {
   background: #6b7280;
   color: white;
 }
@@ -343,6 +383,29 @@
 .conversationButtonActive {
   border-color: #22c55e;
   background: rgba(34, 197, 94, 0.14);
+}
+
+.conversationTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.conversationProfileLink {
+  border: none;
+  background: transparent;
+  color: #99f6e4;
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0;
+}
+
+.conversationProfileLink:hover {
+  color: #ccfbf1;
+  text-decoration: underline;
 }
 
 .conversationMeta {

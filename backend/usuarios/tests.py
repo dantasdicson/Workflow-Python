@@ -51,3 +51,16 @@ class AnuncioServicoTests(TestCase):
         }, format='multipart')
 
         self.assertEqual(response.status_code, 403)
+
+    def test_perfil_publico_nao_expoe_dados_sensiveis(self):
+        response = self.client.get(f'/api/usuarios/{self.freelancer.id_usuario}/perfil-publico/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['id_usuario'], self.freelancer.id_usuario)
+        self.assertEqual(response.data['nome'], self.freelancer.nome)
+        self.assertIn('avaliacao_media', response.data)
+        self.assertIn('total_avaliacoes', response.data)
+        self.assertIn('foto_perfil_url', response.data)
+        self.assertNotIn('cpf', response.data)
+        self.assertNotIn('email', response.data)
+        self.assertNotIn('login', response.data)

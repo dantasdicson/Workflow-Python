@@ -15,9 +15,13 @@ const initialForm = {
   cpf: '',
   freelancer: false,
   categorias_ids: [],
+  foto_perfil_url: '',
+  avaliacao_media: '0.00',
+  total_avaliacoes: 0,
 }
 
 const normalizeUser = (data = {}) => ({
+  id_usuario: data.id_usuario,
   login: data.login || data.username || '',
   nome: data.nome || data.first_name || '',
   sobre_nome: data.sobre_nome || data.sobrenome || data.last_name || '',
@@ -28,6 +32,9 @@ const normalizeUser = (data = {}) => ({
   cpf: data.cpf || '',
   freelancer: Boolean(data.freelancer),
   categorias_ids: Array.isArray(data.categorias) ? data.categorias.map((categoria) => categoria.id) : [],
+  foto_perfil_url: data.foto_perfil_url || '',
+  avaliacao_media: data.avaliacao_media || '0.00',
+  total_avaliacoes: data.total_avaliacoes || 0,
 })
 
 const getApiErrorMessage = (data) => {
@@ -50,6 +57,8 @@ export default function MeuPainel() {
   const [success, setSuccess] = useState(null)
   const [categorias, setCategorias] = useState([])
   const [loadingCategorias, setLoadingCategorias] = useState(true)
+  const [fotoPerfil, setFotoPerfil] = useState(null)
+  const [fotoPreview, setFotoPreview] = useState('')
 
   useEffect(() => {
     const loadUser = async () => {
@@ -122,6 +131,17 @@ export default function MeuPainel() {
     })
   }
 
+  const handleFotoChange = (event) => {
+    const file = event.target.files?.[0] || null
+    setFotoPerfil(file)
+    setFotoPreview(file ? URL.createObjectURL(file) : '')
+    if (file) {
+      setEditing(true)
+      setSuccess(null)
+      setError(null)
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError(null)
@@ -134,19 +154,26 @@ export default function MeuPainel() {
 
     try {
       setSaving(true)
+      const payload = new FormData()
+      payload.append('nome', form.nome)
+      payload.append('sobre_nome', form.sobre_nome)
+      payload.append('email', form.email)
+      if (form.data_nascimento) {
+        payload.append('data_nascimento', form.data_nascimento)
+      }
+      payload.append('num_tel', form.num_tel)
+      payload.append('whatsapp', form.whatsapp ? 'true' : 'false')
+      payload.append('freelancer', form.freelancer ? 'true' : 'false')
+      if (form.freelancer) {
+        form.categorias_ids.forEach((categoriaId) => payload.append('categorias_ids', categoriaId))
+      }
+      if (fotoPerfil) {
+        payload.append('foto_perfil', fotoPerfil)
+      }
+
       const res = await fetch('/api/auth/me', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: form.nome,
-          sobre_nome: form.sobre_nome,
-          email: form.email,
-          data_nascimento: form.data_nascimento || null,
-          num_tel: form.num_tel,
-          whatsapp: form.whatsapp,
-          freelancer: form.freelancer,
-          categorias_ids: form.freelancer ? form.categorias_ids : [],
-        }),
+        body: payload,
       })
 
       const data = await res.json().catch(() => ({}))
@@ -156,6 +183,8 @@ export default function MeuPainel() {
       }
 
       setForm(normalizeUser(data))
+      setFotoPerfil(null)
+      setFotoPreview('')
       setEditing(false)
       setSuccess('Dados salvos com sucesso.')
     } catch (err) {
@@ -171,14 +200,30 @@ export default function MeuPainel() {
       <main className={styles.main}>
         <section className={styles.panel}>
           <div className={styles.headerRow}>
-            <div>
-              <p className={styles.kicker}>Meu Painel</p>
-              <h1 className={styles.title}>Dados da conta</h1>
-              <div className={styles.accountTypeRow}>
-                <span className={styles.accountTypeLabel}>Tipo de conta</span>
-                <span className={`${styles.accountTypeBadge} ${form.freelancer ? styles.freelancerBadge : styles.contractorBadge}`}>
-                  {form.freelancer ? 'Freelancer' : 'Contratante'}
-                </span>
+            <div className={styles.profileSummary}>
+              <div className={styles.avatarBox}>
+                {fotoPreview || form.foto_perfil_url ? (
+                  <span
+                    className={styles.avatarImage}
+                    style={{ backgroundImage: `url(${fotoPreview || form.foto_perfil_url})` }}
+                    aria-label={`Foto de ${form.nome || 'usuario'}`}
+                  />
+                ) : (
+                  <span>{(form.nome || form.login || 'U').slice(0, 1).toUpperCase()}</span>
+                )}
+              </div>
+              <div>
+                <p className={styles.kicker}>Meu Painel</p>
+                <h1 className={styles.title}>Dados da conta</h1>
+                <div className={styles.accountTypeRow}>
+                  <span className={styles.accountTypeLabel}>Tipo de conta</span>
+                  <span className={`${styles.accountTypeBadge} ${form.freelancer ? styles.freelancerBadge : styles.contractorBadge}`}>
+                    {form.freelancer ? 'Freelancer' : 'Contratante'}
+                  </span>
+                  <span className={styles.ratingBadge}>
+                    {Number(form.avaliacao_media || 0).toFixed(2)} estrelas ({form.total_avaliacoes})
+                  </span>
+                </div>
               </div>
             </div>
             <button
@@ -240,6 +285,11 @@ export default function MeuPainel() {
                 <label className={styles.label}>
                   CPF
                   <input className={styles.input} value={form.cpf} disabled placeholder="Nao informado" required />
+                </label>
+
+                <label className={styles.label}>
+                  Foto de perfil
+                  <input className={styles.input} type="file" accept="image/*" onChange={handleFotoChange} disabled={saving} />
                 </label>
 
                 <label className={styles.checkboxLabel}>

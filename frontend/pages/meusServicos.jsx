@@ -80,7 +80,7 @@ export default function MeusServicos() {
         return styles.statusAberta
       case 'em_execucao':
         return styles.statusExecucao
-      case 'concluido':
+      case 'finalizado':
         return styles.statusConcluido
       default:
         return styles.statusDefault
@@ -93,11 +93,32 @@ export default function MeusServicos() {
         return 'Aberta'
       case 'em_execucao':
         return 'Em Execucao'
-      case 'concluido':
-        return 'Concluido'
+      case 'finalizado':
+        return 'Finalizado'
       default:
         return status
     }
+  }
+
+  const formatarMoeda = (valor) => {
+    const numero = Number(valor)
+    if (Number.isNaN(numero)) return 'A combinar'
+
+    return numero.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+    })
+  }
+
+  const formatarData = (valor) => {
+    if (!valor) return 'Sem data'
+    return new Date(valor).toLocaleDateString('pt-BR')
+  }
+
+  const getContratanteNome = (servico) => {
+    const nome = [servico.contratante?.nome, servico.contratante?.sobre_nome].filter(Boolean).join(' ')
+    return nome || 'Nao informado'
   }
 
   const handleExcluir = async (ordemId) => {
@@ -132,64 +153,91 @@ export default function MeusServicos() {
     }
   }
 
-  const renderServicoCard = (servico, { owner = false } = {}) => (
-    <article key={`${owner ? 'owner' : 'candidate'}-${servico.id_os}`} className={styles.servicoCard}>
-      <div className={styles.cardHeader}>
-        <h3>OS #{servico.id_os}</h3>
-        <span className={`${styles.status} ${getStatusColor(servico.status)}`}>
-          {getStatusText(servico.status)}
-        </span>
-      </div>
+  const renderServicoCard = (servico, { owner = false } = {}) => {
+    const totalCandidatos = servico.freelancers_candidatos?.length || 0
+    const pessoaRelacionada = owner
+      ? servico.freelancer_selecionado?.nome || 'Ainda nao escolhido'
+      : servico.freelancer_selecionado?.nome || getContratanteNome(servico)
+    const pessoaLabel = owner ? 'Freelancer' : (servico.freelancer_selecionado ? 'Selecionado' : 'Contratante')
+    const pessoaId = owner
+      ? servico.freelancer_selecionado?.id_usuario
+      : servico.freelancer_selecionado?.id_usuario || servico.contratante?.id_usuario
 
-      <div className={styles.cardContent}>
-        <p><strong>Descricao:</strong> {servico.descricao_servico}</p>
-        <p><strong>Valor estimado:</strong> R$ {servico.valor_estimado_minimo} - R$ {servico.valor_estimado_maximo}</p>
-        <p><strong>Data de criacao:</strong> {new Date(servico.data_criacao).toLocaleDateString('pt-BR')}</p>
+    return (
+      <article key={`${owner ? 'owner' : 'candidate'}-${servico.id_os}`} className={styles.servicoCard}>
+        <div className={styles.cardTop}>
+          <div>
+            <span className={styles.cardEyebrow}>{owner ? 'Publicado por voce' : 'Candidatura enviada'}</span>
+            <h3>OS #{servico.id_os}</h3>
+          </div>
+          <span className={`${styles.status} ${getStatusColor(servico.status)}`}>
+            {getStatusText(servico.status)}
+          </span>
+        </div>
 
-        {owner ? (
-          <>
-            <p><strong>Candidatos:</strong> {servico.freelancers_candidatos?.length || 0}</p>
-            {servico.freelancer_selecionado && (
-              <p><strong>Freelancer selecionado:</strong> {servico.freelancer_selecionado.nome}</p>
-            )}
-          </>
-        ) : (
-          <>
-            <p><strong>Contratante:</strong> {servico.contratante?.nome} {servico.contratante?.sobre_nome}</p>
-            <p><strong>Total de candidatos:</strong> {servico.freelancers_candidatos?.length || 0}</p>
-            {servico.freelancer_selecionado && (
-              <p><strong>Selecionado:</strong> {servico.freelancer_selecionado.nome}</p>
-            )}
-          </>
-        )}
-      </div>
+        <p className={styles.description}>{servico.descricao_servico}</p>
 
-      <div className={styles.cardActions}>
-        <button
-          className={styles.viewBtn}
-          onClick={() => router.push(`/detalhesOrdem?id=${servico.id_os}`)}
-        >
-          Ver Detalhes
-        </button>
+        <div className={styles.valueBox}>
+          <span>Valor estimado</span>
+          <strong>
+            {formatarMoeda(servico.valor_estimado_minimo)} - {formatarMoeda(servico.valor_estimado_maximo)}
+          </strong>
+        </div>
 
-        {owner && servico.status === 'aberta' && (
-          <button className={styles.editBtn}>
-            Editar
-          </button>
-        )}
+        <dl className={styles.metaGrid}>
+          <div>
+            <dt>Criação</dt>
+            <dd>{formatarData(servico.data_criacao)}</dd>
+          </div>
+          <div>
+            <dt>Candidatos</dt>
+            <dd>{totalCandidatos}</dd>
+          </div>
+          <div className={styles.metaWide}>
+            <dt>{pessoaLabel}</dt>
+            <dd>
+              {pessoaId ? (
+                <button
+                  type="button"
+                  className={styles.profileLink}
+                  onClick={() => router.push(`/perfilUsuario?id=${pessoaId}`)}
+                >
+                  {pessoaRelacionada}
+                </button>
+              ) : (
+                pessoaRelacionada
+              )}
+            </dd>
+          </div>
+        </dl>
 
-        {owner && (
+        <div className={styles.cardActions}>
           <button
-            className={`${styles.deleteBtn} ${deleting ? styles.deleting : ''}`}
-            onClick={() => handleExcluir(servico.id_os)}
-            disabled={deleting}
+            className={styles.viewBtn}
+            onClick={() => router.push(`/detalhesOrdem?id=${servico.id_os}`)}
           >
-            {deleting ? 'Excluindo...' : 'Excluir'}
+            Ver detalhes
           </button>
-        )}
-      </div>
-    </article>
-  )
+
+          {owner && servico.status === 'aberta' && (
+            <button className={styles.editBtn}>
+              Editar
+            </button>
+          )}
+
+          {owner && (
+            <button
+              className={`${styles.deleteBtn} ${deleting ? styles.deleting : ''}`}
+              onClick={() => handleExcluir(servico.id_os)}
+              disabled={deleting}
+            >
+              {deleting ? 'Excluindo...' : 'Excluir'}
+            </button>
+          )}
+        </div>
+      </article>
+    )
+  }
 
   return (
     <div className={styles.container}>

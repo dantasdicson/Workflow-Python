@@ -1,6 +1,9 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Avg
 from django.db.models.functions import Lower
 from django.utils import timezone
 
@@ -75,8 +78,16 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     whatsapp = models.BooleanField(default=False)
     cpf = models.CharField(max_length=14, unique=True)
     freelancer = models.BooleanField(default=False)
+    foto_perfil = models.ImageField(
+        upload_to='usuarios/perfil/',
+        null=True,
+        blank=True,
+        validators=[validate_avatar_file_size],
+    )
     categorias = models.ManyToManyField(Categoria, blank=True, related_name='usuarios')
     data_criacao = models.DateTimeField(auto_now_add=True)
+    avaliacao_media = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    total_avaliacoes = models.PositiveIntegerField(default=0)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -97,6 +108,15 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.nome} {self.sobre_nome}'
+
+    def recalcular_avaliacao(self):
+        resumo = self.avaliacoes_recebidas.aggregate(media=Avg('nota_profissional'))
+        total = self.avaliacoes_recebidas.count()
+        media = Decimal(str(resumo['media'] or 0))
+
+        self.avaliacao_media = round(media, 2)
+        self.total_avaliacoes = total
+        self.save(update_fields=['avaliacao_media', 'total_avaliacoes'])
 
 
 class Notificacao(models.Model):

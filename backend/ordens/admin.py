@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ConversaOrdem, MensagemChat, OrdemDeServico
+from .models import AvaliacaoOrdem, ConversaOrdem, MensagemChat, OrdemDeServico
 
 @admin.register(OrdemDeServico)
 class OrdemDeServicoAdmin(admin.ModelAdmin):
@@ -25,3 +25,10 @@ class MensagemChatAdmin(admin.ModelAdmin):
     list_display = ('id', 'conversa', 'remetente', 'data_envio')
     search_fields = ('conteudo', 'remetente__login')
     list_filter = ('data_envio',)
+
+
+@admin.register(AvaliacaoOrdem)
+class AvaliacaoOrdemAdmin(admin.ModelAdmin):
+    list_display = ('id', 'ordem_servico', 'avaliador', 'avaliado', 'avaliador_tipo', 'nota_profissional', 'nota_plataforma', 'data_criacao')
+    list_filter = ('avaliador_tipo', 'nota_profissional', 'nota_plataforma', 'data_criacao')
+    search_fields = ('ordem_servico__id_os', 'avaliador__login', 'avaliado__login', 'comentario')

@@ -11,6 +11,12 @@ const formatDate = (value) => {
   return new Date(value).toLocaleDateString('pt-BR')
 }
 
+const getFreelancerId = (anuncio) => (
+  anuncio.freelancer?.id_usuario
+  || anuncio.freelancer?.id
+  || anuncio.freelancer_id
+)
+
 export default function ListagemContratantes() {
   const router = useRouter()
   const [anuncios, setAnuncios] = useState([])
@@ -67,77 +73,100 @@ export default function ListagemContratantes() {
               </div>
             ) : (
               <div className={styles.grid}>
-                {anuncios.map((anuncio) => (
-                  <article key={anuncio.id} className={styles.card}>
-                    <div className={styles.cardHeader}>
-                      {anuncio.foto_avatar_url ? (
-                        <img
-                          src={anuncio.foto_avatar_url}
-                          alt={`Avatar de ${anuncio.freelancer?.nome || 'freelancer'}`}
-                          className={styles.avatar}
-                        />
-                      ) : (
-                        <div className={styles.avatarPlaceholder}>
-                          {(anuncio.freelancer?.nome || 'F').slice(0, 1).toUpperCase()}
-                        </div>
-                      )}
+                {anuncios.map((anuncio) => {
+                  const avatarUrl = anuncio.freelancer?.foto_perfil_url || anuncio.foto_avatar_url
+                  const freelancerId = getFreelancerId(anuncio)
+                  const abrirPerfil = () => {
+                    if (!freelancerId) {
+                      setError('Nao foi possivel identificar o perfil deste freelancer.')
+                      return
+                    }
+                    router.push(`/perfilUsuario?id=${freelancerId}`)
+                  }
+
+                  return (
+                    <article key={anuncio.id} className={styles.card}>
+                      <div className={styles.cardHeader}>
+                        {avatarUrl ? (
+                          <img
+                            src={avatarUrl}
+                            alt={`Avatar de ${anuncio.freelancer?.nome || 'freelancer'}`}
+                            className={styles.avatar}
+                          />
+                        ) : (
+                          <div className={styles.avatarPlaceholder}>
+                            {(anuncio.freelancer?.nome || 'F').slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
 
                       <div className={styles.identity}>
                         <h2 className={styles.cardTitle}>{anuncio.titulo_profissional}</h2>
-                        <p className={styles.freelancerName}>
+                        <button
+                          type="button"
+                          className={styles.freelancerName}
+                          onClick={abrirPerfil}
+                        >
                           {anuncio.freelancer?.nome} {anuncio.freelancer?.sobre_nome}
-                        </p>
+                        </button>
                         <p className={styles.meta}>
                           Publicado em {formatDate(anuncio.data_criacao)}
                         </p>
                       </div>
-                    </div>
-
-                    <p className={styles.description}>{anuncio.descricao}</p>
-
-                    <div className={styles.tags}>
-                      {Array.isArray(anuncio.categorias) && anuncio.categorias.length > 0 ? (
-                        anuncio.categorias.map((categoria) => (
-                          <span key={categoria.id} className={styles.tag}>
-                            {categoria.nome}
-                          </span>
-                        ))
-                      ) : (
-                        <span className={styles.tagMuted}>Sem categorias informadas</span>
-                      )}
-                    </div>
-
-                    <div className={styles.cardFooter}>
-                      <div className={styles.contactInfo}>
-                        <span>{anuncio.freelancer?.email || 'Email nao informado'}</span>
-                        {anuncio.freelancer?.num_tel && <span>{anuncio.freelancer.num_tel}</span>}
                       </div>
 
-                      <div className={styles.actions}>
-                        {anuncio.portfolio_url && (
-                          <a
-                            href={anuncio.portfolio_url}
-                            target="_blank"
-                            rel="noreferrer"
+                      <p className={styles.description}>{anuncio.descricao}</p>
+
+                      <div className={styles.tags}>
+                        {Array.isArray(anuncio.categorias) && anuncio.categorias.length > 0 ? (
+                          anuncio.categorias.map((categoria) => (
+                            <span key={categoria.id} className={styles.tag}>
+                              {categoria.nome}
+                            </span>
+                          ))
+                        ) : (
+                          <span className={styles.tagMuted}>Sem categorias informadas</span>
+                        )}
+                      </div>
+
+                      <div className={styles.cardFooter}>
+                        <div className={styles.contactInfo}>
+                          <span>{anuncio.freelancer?.email || 'Email nao informado'}</span>
+                          {anuncio.freelancer?.num_tel && <span>{anuncio.freelancer.num_tel}</span>}
+                        </div>
+
+                        <div className={styles.actions}>
+                          <button
+                            type="button"
                             className={styles.secondaryButton}
+                            onClick={abrirPerfil}
                           >
-                            Ver portfolio
-                          </a>
-                        )}
-                        {anuncio.portfolio_arquivo_url && (
-                          <a
-                            href={anuncio.portfolio_arquivo_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={styles.primaryButton}
-                          >
-                            Abrir anexo
-                          </a>
-                        )}
+                            Ver perfil
+                          </button>
+                          {anuncio.portfolio_url && (
+                            <a
+                              href={anuncio.portfolio_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={styles.secondaryButton}
+                            >
+                              Ver portfolio
+                            </a>
+                          )}
+                          {anuncio.portfolio_arquivo_url && (
+                            <a
+                              href={anuncio.portfolio_arquivo_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={styles.primaryButton}
+                            >
+                              Abrir anexo
+                            </a>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  )
+                })}
               </div>
             )}
           </section>

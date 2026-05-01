@@ -5,9 +5,22 @@ from .models import AnuncioServico, Categoria, Notificacao, Usuario
 
 @admin.register(Usuario)
 class UsuarioAdmin(admin.ModelAdmin):
-    list_display = ('login', 'nome', 'sobre_nome', 'email', 'freelancer', 'is_staff', 'is_active', 'data_criacao')
+    list_display = (
+        'login',
+        'nome',
+        'sobre_nome',
+        'email',
+        'freelancer',
+        'foto_perfil',
+        'avaliacao_media',
+        'total_avaliacoes',
+        'is_staff',
+        'is_active',
+        'data_criacao',
+    )
     list_filter = ('freelancer', 'is_staff', 'is_active', 'data_criacao')
     search_fields = ('login', 'nome', 'sobre_nome', 'email')
+    readonly_fields = ('avaliacao_media', 'total_avaliacoes')
     ordering = ('-data_criacao',)
 
 

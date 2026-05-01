@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import Navbar from '../components/Navbar'
 import styles from '../styles/ListarServicos.module.css'
-import { apiFetch } from '../lib/api'
-import { getMe } from '../lib/api'
+import { apiFetch, getMe } from '../lib/api'
 
 export default function ListarServicos() {
   const router = useRouter()
@@ -12,24 +11,9 @@ export default function ListarServicos() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    ;(async () => {
-      const me = await getMe()
-      if (!me) {
-        router.push('/login')
-        return
-      }
-      console.log('Usuário logado:', me);
-      console.log('É freelancer?', me.freelancer);
-      setUser(me)
-      carregarOrdensAbertas()
-    })()
-  }, [router])
-
-  const carregarOrdensAbertas = async () => {
+  const carregarOrdensAbertas = useCallback(async () => {
     try {
       setLoading(true)
-      // Buscar ordens com status 'aberta'
       const response = await apiFetch('/api/ordens?status=aberta')
 
       if (!response.ok) {
@@ -41,8 +25,6 @@ export default function ListarServicos() {
       }
 
       const data = await response.json()
-
-      // Verificar se a resposta é um array ou um objeto paginado
       const ordensData = Array.isArray(data) ? data : (data.results || [])
       setOrdens(ordensData)
     } catch (err) {
@@ -51,77 +33,156 @@ export default function ListarServicos() {
     } finally {
       setLoading(false)
     }
+  }, [router])
+
+  useEffect(() => {
+    ;(async () => {
+      const me = await getMe()
+      if (!me) {
+        router.push('/login')
+        return
+      }
+
+      setUser(me)
+      carregarOrdensAbertas()
+    })()
+  }, [carregarOrdensAbertas, router])
+
+  const formatarMoeda = (valor) => {
+    const numero = Number(valor)
+    if (Number.isNaN(numero)) return 'A combinar'
+
+    return numero.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+    })
   }
+
+  const formatarData = (valor) => {
+    if (!valor) return 'Sem data'
+    return new Date(valor).toLocaleDateString('pt-BR')
+  }
+
+  const getStatusLabel = (status) => {
+    if (status === 'aberta') return 'Aberta'
+    if (status === 'em_execucao') return 'Em execução'
+    return 'Finalizado'
+  }
+
+  const getContratanteNome = (ordem) => {
+    const idContratante = ordem.contratante?.id_usuario || ordem.usuario?.id_usuario || ordem.id_usuario
+    return ordem.contratante?.nome || ordem.usuario?.nome || (idContratante ? `ID ${idContratante}` : 'Não informado')
+  }
+
+  const getContratanteId = (ordem) => ordem.contratante?.id_usuario || ordem.usuario?.id_usuario || ordem.id_usuario
 
   return (
     <div className={styles.container}>
       <Navbar />
       <main className={styles.main}>
-        <h1 className={styles.title}>Ordens de Serviço</h1>
+        <div className={styles.pageHeader}>
+          <span className={styles.pageEyebrow}>Marketplace de serviços</span>
+          <h1 className={styles.title}>Ordens de Serviço</h1>
+        </div>
 
         <div className={styles.content}>
-          {loading && <p>Carregando ordens de serviço...</p>}
+          {loading && <p className={styles.stateText}>Carregando ordens de serviço...</p>}
 
           {error && <p className={styles.error}>Erro: {error}</p>}
 
           {!loading && !error && (
             <div className={styles.ordensList}>
               {ordens.length === 0 ? (
-                <p>Nenhuma ordem de serviço em aberto encontrada.</p>
+                <p className={styles.stateText}>Nenhuma ordem de serviço em aberto encontrada.</p>
               ) : (
-                ordens.map((ordem) => (
-                  <div key={ordem.id_os} className={styles.ordemCard}>
-                    <div className={styles.ordemHeader}>
-                      <h3>OS #{ordem.id_os}</h3>
-                      <span className={`${styles.status} ${styles[ordem.status]}`}>
-                        {ordem.status === 'aberta' ? 'Aberta' : 
-                         ordem.status === 'em_execucao' ? 'Em Execução' : 'Concluída'}
-                      </span>
-                    </div>
-                    <p><strong>Descrição:</strong> {ordem.descricao_servico}</p>
-                    <p><strong>Valor estimado:</strong> R$ {ordem.valor_estimado_minimo} - R$ {ordem.valor_estimado_maximo}</p>
-                    <p><strong>Data de criação:</strong> {new Date(ordem.data_criacao).toLocaleDateString('pt-BR')}</p>
-                    <p><strong>ID do Contratante:</strong> {ordem.id_usuario}</p>
-                    {ordem.usuario && (
-                      <p><strong>Nome do Contratante:</strong> {ordem.usuario.nome}</p>
-                    )}
-                    <p><strong>Candidatos:</strong> {ordem.freelancers_candidatos?.length || 0}/7</p>
-                    
-                    <div className={styles.ordemActions}>
-                      <button 
-                        className={styles.detalhesBtn}
-                        onClick={() => {
-                          console.log('Botão Ver Detalhes clicado!');
-                          console.log('ID da ordem:', ordem.id_os);
-                          console.log('URL que será navegada:', `/detalhesOrdem?id=${ordem.id_os}`);
-                          // Testando com window.location.href
-                          window.location.href = `/detalhesOrdem?id=${ordem.id_os}`;
-                        }}
-                      >
-                        Ver Detalhes
-                      </button>
-                      
-                      {ordem.status === 'aberta' && user?.freelancer && (
-                        <button 
-                          className={styles.candidatarBtn}
-                          onClick={() => {
-                            console.log('Clicando em candidatar para ordem:', ordem.id_os);
-                            console.log('Usuário:', user);
-                            router.push(`/detalhesOrdem?id=${ordem.id_os}`);
-                          }}
-                        >
-                          Candidatar-se
-                        </button>
+                ordens.map((ordem) => {
+                  const candidatos = ordem.freelancers_candidatos?.length || 0
+                  const categorias = ordem.categorias_necessarias || []
+
+                  return (
+                    <article key={ordem.id_os} className={styles.ordemCard}>
+                      <div className={styles.ordemHeader}>
+                        <div>
+                          <span className={styles.cardEyebrow}>Ordem de serviço</span>
+                          <h3>OS #{ordem.id_os}</h3>
+                        </div>
+                        <span className={`${styles.status} ${styles[ordem.status]}`}>
+                          {getStatusLabel(ordem.status)}
+                        </span>
+                      </div>
+
+                      {categorias.length > 0 && (
+                        <div className={styles.categoryRow}>
+                          {categorias.slice(0, 2).map((categoria) => (
+                            <span key={categoria.id_categoria || categoria.id} className={styles.categoryPill}>
+                              {categoria.nome_categoria || categoria.nome}
+                            </span>
+                          ))}
+                          {categorias.length > 2 && (
+                            <span className={styles.categoryMore}>+{categorias.length - 2}</span>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  </div>
-                ))
+
+                      <p className={styles.descricao}>{ordem.descricao_servico}</p>
+
+                      <div className={styles.valorBox}>
+                        <span>Valor estimado</span>
+                        <strong>
+                          {formatarMoeda(ordem.valor_estimado_minimo)} - {formatarMoeda(ordem.valor_estimado_maximo)}
+                        </strong>
+                      </div>
+
+                      <dl className={styles.metaGrid}>
+                        <div>
+                          <dt>Criação</dt>
+                          <dd>{formatarData(ordem.data_criacao)}</dd>
+                        </div>
+                        <div>
+                          <dt>Candidatos</dt>
+                          <dd>{candidatos}/7</dd>
+                        </div>
+                        <div className={styles.metaWide}>
+                          <dt>Contratante</dt>
+                          <dd>
+                            <button
+                              type="button"
+                              className={styles.profileLink}
+                              onClick={() => router.push(`/perfilUsuario?id=${getContratanteId(ordem)}`)}
+                            >
+                              {getContratanteNome(ordem)}
+                            </button>
+                          </dd>
+                        </div>
+                      </dl>
+
+                      <div className={styles.ordemActions}>
+                        <button
+                          className={styles.detalhesBtn}
+                          onClick={() => router.push(`/detalhesOrdem?id=${ordem.id_os}`)}
+                        >
+                          Ver detalhes
+                        </button>
+
+                        {ordem.status === 'aberta' && user?.freelancer && (
+                          <button
+                            className={styles.candidatarBtn}
+                            onClick={() => router.push(`/detalhesOrdem?id=${ordem.id_os}`)}
+                          >
+                            Candidatar-se
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  )
+                })
               )}
             </div>
           )}
         </div>
       </main>
-      
+
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div className={styles.footerColumns}>

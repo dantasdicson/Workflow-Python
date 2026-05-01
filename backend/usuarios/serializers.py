@@ -47,6 +47,7 @@ class NotificacaoSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=False)
     categorias = CategoriaSerializer(many=True, read_only=True)
+    foto_perfil_url = serializers.SerializerMethodField()
     categorias_ids = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.all(),
         many=True,
@@ -67,17 +68,28 @@ class UsuarioSerializer(serializers.ModelSerializer):
             'whatsapp',
             'cpf',
             'freelancer',
+            'foto_perfil',
+            'foto_perfil_url',
             'categorias',
             'categorias_ids',
             'data_criacao',
+            'avaliacao_media',
+            'total_avaliacoes',
             'password',
         ]
-        read_only_fields = ['id_usuario', 'data_criacao']
+        read_only_fields = ['id_usuario', 'data_criacao', 'foto_perfil_url', 'avaliacao_media', 'total_avaliacoes']
         extra_kwargs = {
             'login': {'validators': []},
             'email': {'validators': []},
             'cpf': {'validators': []},
         }
+
+    def get_foto_perfil_url(self, obj):
+        request = self.context.get('request')
+        if not obj.foto_perfil:
+            return None
+        url = obj.foto_perfil.url
+        return request.build_absolute_uri(url) if request else url
 
     def validate_login(self, value):
         login = str(value or '').strip()
@@ -165,8 +177,36 @@ class UsuarioSerializer(serializers.ModelSerializer):
         return instance
 
 
+class PerfilPublicoUsuarioSerializer(serializers.ModelSerializer):
+    categorias = CategoriaSerializer(many=True, read_only=True)
+    foto_perfil_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Usuario
+        fields = [
+            'id_usuario',
+            'nome',
+            'sobre_nome',
+            'freelancer',
+            'foto_perfil_url',
+            'categorias',
+            'data_criacao',
+            'avaliacao_media',
+            'total_avaliacoes',
+        ]
+        read_only_fields = fields
+
+    def get_foto_perfil_url(self, obj):
+        request = self.context.get('request')
+        if not obj.foto_perfil:
+            return None
+        url = obj.foto_perfil.url
+        return request.build_absolute_uri(url) if request else url
+
+
 class AnuncioServicoSerializer(serializers.ModelSerializer):
     freelancer = UsuarioSerializer(read_only=True)
+    freelancer_id = serializers.IntegerField(read_only=True)
     categorias = CategoriaSerializer(many=True, read_only=True)
     categorias_ids = serializers.PrimaryKeyRelatedField(
         queryset=Categoria.objects.all(),
@@ -183,6 +223,7 @@ class AnuncioServicoSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'freelancer',
+            'freelancer_id',
             'titulo_profissional',
             'descricao',
             'categorias',
@@ -195,7 +236,7 @@ class AnuncioServicoSerializer(serializers.ModelSerializer):
             'data_criacao',
             'data_atualizacao',
         ]
-        read_only_fields = ['id', 'freelancer', 'data_criacao', 'data_atualizacao', 'foto_avatar_url', 'portfolio_arquivo_url']
+        read_only_fields = ['id', 'freelancer', 'freelancer_id', 'data_criacao', 'data_atualizacao', 'foto_avatar_url', 'portfolio_arquivo_url']
 
     def get_foto_avatar_url(self, obj):
         request = self.context.get('request')

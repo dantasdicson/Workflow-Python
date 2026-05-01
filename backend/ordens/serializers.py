@@ -1,13 +1,35 @@
 from rest_framework import serializers
-from .models import OrdemDeServico, ConversaOrdem, MensagemChat
+from .models import AvaliacaoOrdem, OrdemDeServico, ConversaOrdem, MensagemChat
 from usuarios.models import Usuario, Categoria
 from usuarios.serializers import UsuarioSerializer, CategoriaSerializer
+
+class AvaliacaoOrdemSerializer(serializers.ModelSerializer):
+    avaliador = UsuarioSerializer(read_only=True)
+    avaliado = UsuarioSerializer(read_only=True)
+
+    class Meta:
+        model = AvaliacaoOrdem
+        fields = [
+            'id',
+            'ordem_servico',
+            'avaliador',
+            'avaliado',
+            'avaliador_tipo',
+            'nota_profissional',
+            'nota_plataforma',
+            'comentario',
+            'data_criacao',
+            'data_atualizacao',
+        ]
+        read_only_fields = fields
+
 
 class OrdemDeServicoSerializer(serializers.ModelSerializer):
     contratante = UsuarioSerializer(read_only=True)
     freelancer_selecionado = UsuarioSerializer(read_only=True)
     freelancers_candidatos = UsuarioSerializer(many=True, read_only=True)
     categorias_necessarias = CategoriaSerializer(many=True, read_only=True)
+    avaliacoes = AvaliacaoOrdemSerializer(many=True, read_only=True)
 
     contratante_id = serializers.PrimaryKeyRelatedField(
         queryset=Usuario.objects.all(),
@@ -44,9 +66,10 @@ class OrdemDeServicoSerializer(serializers.ModelSerializer):
             'id_os', 'descricao_servico', 'valor_estimado_minimo', 'valor_estimado_maximo',
             'status', 'data_criacao', 'data_conclusao', 'imagem',
             'contratante', 'freelancer_selecionado', 'freelancers_candidatos', 'categorias_necessarias',
-            'contratante_id', 'freelancer_selecionado_id', 'freelancers_candidatos_ids', 'categorias_necessarias_ids'
+            'avaliacoes', 'contratante_id', 'freelancer_selecionado_id', 'freelancers_candidatos_ids',
+            'categorias_necessarias_ids'
         ]
-        read_only_fields = ['id_os', 'data_criacao']
+        read_only_fields = ['id_os', 'data_criacao', 'status', 'data_conclusao']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

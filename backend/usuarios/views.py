@@ -9,6 +9,7 @@ from .serializers import (
     AnuncioServicoSerializer,
     CategoriaSerializer,
     NotificacaoSerializer,
+    PerfilPublicoUsuarioSerializer,
     UsuarioSerializer,
 )
 
@@ -20,18 +21,26 @@ class UsuarioViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
     def get_permissions(self):
-        if getattr(self, 'action', None) in {'list', 'retrieve', 'create'}:
+        if getattr(self, 'action', None) in {'list', 'retrieve', 'create', 'perfil_publico'}:
             return [AllowAny()]
         return [IsAuthenticated()]
 
     def get_queryset(self):
         if getattr(self, 'action', None) == 'list':
             return Usuario.objects.all()
+        if getattr(self, 'action', None) == 'perfil_publico':
+            return Usuario.objects.prefetch_related('categorias').all()
 
         user = self.request.user
         if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
             return Usuario.objects.all()
         return Usuario.objects.filter(pk=user.pk)
+
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny], url_path='perfil-publico')
+    def perfil_publico(self, request, pk=None):
+        usuario = self.get_object()
+        serializer = PerfilPublicoUsuarioSerializer(usuario, context={'request': request})
+        return Response(serializer.data)
 
 
 class CategoriaViewSet(viewsets.ModelViewSet):
@@ -98,7 +107,7 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UsuarioSerializer(request.user)
+        serializer = UsuarioSerializer(request.user, context={'request': request})
         return Response(serializer.data)
 
     def put(self, request):
@@ -106,7 +115,7 @@ class MeView(APIView):
         data.pop('login', None)
         data.pop('cpf', None)
 
-        serializer = UsuarioSerializer(request.user, data=data, partial=True)
+        serializer = UsuarioSerializer(request.user, data=data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)

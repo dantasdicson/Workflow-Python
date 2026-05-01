@@ -68,9 +68,9 @@
 
 .panel {
   min-height: 100%;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(15, 23, 42, 0.28);
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 23, 42, 0.32);
   padding: 1.25rem;
 }
 
@@ -102,7 +102,7 @@
   min-width: 2.2rem;
   height: 2.2rem;
   padding: 0 0.7rem;
-  border-radius: 999px;
+  border-radius: 8px;
   background: rgba(20, 184, 166, 0.18);
   border: 1px solid rgba(45, 212, 191, 0.28);
   color: #99f6e4;
@@ -116,41 +116,72 @@
 }
 
 .servicoCard {
-  background: rgba(255,255,255,0.09);
-  border-radius: 1rem;
-  padding: 1.2rem;
-  border: 1px solid rgba(255,255,255,0.12);
-  transition: transform 0.2s, box-shadow 0.2s;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(30, 41, 59, 0.94), rgba(15, 23, 42, 0.98)),
+    #0f172a;
+  border-radius: 8px;
+  padding: 1.05rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 16px 34px rgba(2, 6, 23, 0.28);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.servicoCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #2dd4bf, #2563eb);
 }
 
 .servicoCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px 0 rgba(0,0,0,0.24);
+  transform: translateY(-3px);
+  border-color: rgba(45, 212, 191, 0.45);
+  box-shadow: 0 22px 46px rgba(2, 6, 23, 0.42);
 }
 
-.cardHeader {
+.cardTop {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
 }
 
-.cardHeader h3 {
+.cardTop h3 {
   color: #f1f5f9;
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0.15rem 0 0;
+}
+
+.cardEyebrow {
+  display: block;
+  color: #5eead4;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  flex: 0 0 auto;
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.65rem;
+  border-radius: 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
 }
 
 .statusAberta {
@@ -160,9 +191,9 @@
 }
 
 .statusExecucao {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.38);
 }
 
 .statusConcluido {
@@ -177,49 +208,130 @@
   border: 1px solid rgba(156, 163, 175, 0.3);
 }
 
-.cardContent {
-  margin-bottom: 1.2rem;
-}
-
-.cardContent p {
-  color: #e2e8f0;
+.description {
+  min-height: 4.6rem;
+  margin: 0 0 0.95rem;
+  color: rgba(226, 232, 240, 0.86);
   font-size: 0.9rem;
-  line-height: 1.55;
-  margin: 0.45rem 0;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.cardContent strong {
-  color: #f1f5f9;
-  font-weight: 600;
+.valueBox {
+  margin: 0 0 0.9rem;
+  padding: 0.8rem 0.85rem;
+  background: rgba(2, 6, 23, 0.42);
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  border-radius: 8px;
+}
+
+.valueBox span {
+  display: block;
+  color: #93c5fd;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+}
+
+.valueBox strong {
+  color: #f8fafc;
+  font-size: 0.98rem;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 0 0 1rem;
+}
+
+.metaGrid div {
+  min-width: 0;
+  padding: 0.68rem;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 8px;
+}
+
+.metaWide {
+  grid-column: 1 / -1;
+}
+
+.metaGrid dt {
+  color: rgba(148, 163, 184, 0.92);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem;
+  text-transform: uppercase;
+}
+
+.metaGrid dd {
+  color: #f8fafc;
+  font-size: 0.86rem;
+  font-weight: 700;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileLink {
+  border: none;
+  background: transparent;
+  color: #99f6e4;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  padding: 0;
+}
+
+.profileLink:hover {
+  color: #ccfbf1;
+  text-decoration: underline;
 }
 
 .cardActions {
-  display: flex;
-  gap: 0.7rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-top: auto;
+}
+
+.cardActions button:only-child {
+  grid-column: 1 / -1;
 }
 
 .viewBtn,
 .editBtn,
 .deleteBtn,
 .createBtn {
-  padding: 0.65rem 1rem;
-  border-radius: 0.75rem;
-  font-size: 0.88rem;
-  font-weight: 700;
+  min-height: 40px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
   border: none;
+  text-align: center;
 }
 
 .viewBtn {
-  background: rgba(59, 130, 246, 0.2);
-  color: #93c5fd;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(30, 41, 59, 0.92);
+  color: #dbeafe;
+  border: 1px solid rgba(96, 165, 250, 0.34);
 }
 
 .viewBtn:hover {
-  background: rgba(59, 130, 246, 0.3);
+  background: rgba(37, 99, 235, 0.22);
+  border-color: rgba(96, 165, 250, 0.62);
+  transform: translateY(-1px);
 }
 
 .editBtn {
@@ -230,11 +342,18 @@
 
 .editBtn:hover {
   background: rgba(245, 158, 11, 0.3);
+  transform: translateY(-1px);
 }
 
 .deleteBtn {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+}
+
+.deleteBtn:hover {
+  background: rgba(239, 68, 68, 0.24);
+  transform: translateY(-1px);
 }
 
 .deleteBtn:disabled {
@@ -247,8 +366,14 @@
 }
 
 .createBtn {
-  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
-  color: white;
+  background: #14b8a6;
+  color: #042f2e;
+  box-shadow: 0 12px 22px rgba(20, 184, 166, 0.18);
+}
+
+.createBtn:hover {
+  background: #2dd4bf;
+  transform: translateY(-1px);
 }
 
 .message,
@@ -377,7 +502,7 @@
   }
 
   .panelHeader,
-  .cardHeader {
+  .cardTop {
     flex-direction: column;
     align-items: flex-start;
   }

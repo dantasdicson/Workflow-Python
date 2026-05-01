@@ -10,8 +10,8 @@ function buildOrdensProxyPath(path) {
 
 function getStatusLabel(status) {
   if (status === 'aberta') return 'Aberta'
-  if (status === 'em_execucao') return 'Em andamento'
-  if (status === 'concluido') return 'Concluída'
+  if (status === 'em_execucao') return 'Em execucao'
+  if (status === 'finalizado') return 'Finalizado'
   return status
 }
 
@@ -30,6 +30,17 @@ export default function DetalhesOrdem() {
   const [mensagensChat, setMensagensChat] = useState([])
   const [textoMensagem, setTextoMensagem] = useState('')
   const [enviandoMensagem, setEnviandoMensagem] = useState(false)
+  const [finalizando, setFinalizando] = useState(false)
+  const [avaliandoContratante, setAvaliandoContratante] = useState(false)
+  const [avaliacaoFinal, setAvaliacaoFinal] = useState({
+    nota_freelancer: '5',
+    nota_plataforma: '5',
+    comentario: '',
+  })
+  const [avaliacaoContratante, setAvaliacaoContratante] = useState({
+    nota_contratante: '5',
+    comentario: '',
+  })
   const pollingRef = useRef(null)
 
   useEffect(() => {
@@ -193,6 +204,61 @@ export default function DetalhesOrdem() {
     }
   }
 
+  const handleFinalizarServico = async (event) => {
+    event.preventDefault()
+    setFinalizando(true)
+    setMensagem('')
+    try {
+      const response = await apiFetch(buildOrdensProxyPath(`${id}/finalizar-servico/`), {
+        method: 'POST',
+        body: JSON.stringify({
+          nota_freelancer: Number(avaliacaoFinal.nota_freelancer),
+          nota_plataforma: Number(avaliacaoFinal.nota_plataforma),
+          comentario: avaliacaoFinal.comentario,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setMensagem(data.error || 'Nao foi possivel finalizar a ordem.')
+        return
+      }
+
+      setMensagem(data.message)
+      await carregarTudo()
+    } catch (err) {
+      setMensagem('Erro ao finalizar a ordem.')
+    } finally {
+      setFinalizando(false)
+    }
+  }
+
+  const handleAvaliarContratante = async (event) => {
+    event.preventDefault()
+    setAvaliandoContratante(true)
+    setMensagem('')
+    try {
+      const response = await apiFetch(buildOrdensProxyPath(`${id}/avaliar-contratante/`), {
+        method: 'POST',
+        body: JSON.stringify({
+          nota_contratante: Number(avaliacaoContratante.nota_contratante),
+          comentario: avaliacaoContratante.comentario,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setMensagem(data.error || 'Nao foi possivel registrar a avaliacao.')
+        return
+      }
+
+      setMensagem(data.message)
+      await carregarTudo()
+    } catch (err) {
+      setMensagem('Erro ao registrar avaliacao.')
+    } finally {
+      setAvaliandoContratante(false)
+    }
+  }
+
   const handleEnviarMensagem = async (event) => {
     event.preventDefault()
     if (!conversaAtivaId || !textoMensagem.trim()) return
@@ -223,12 +289,28 @@ export default function DetalhesOrdem() {
     }
   }
 
+  const abrirPerfilUsuario = (usuario, event) => {
+    if (event) {
+      event.stopPropagation()
+    }
+
+    if (!usuario?.id_usuario) {
+      setMensagem('Nao foi possivel abrir o perfil deste usuario.')
+      return
+    }
+
+    router.push(`/perfilUsuario?id=${usuario.id_usuario}`)
+  }
+
   const isCandidato = () => {
     if (!ordem || !user) return false
     return ordem.freelancers_candidatos?.some((candidato) => candidato.id_usuario === user.id_usuario)
   }
 
   const isContratante = ordem?.contratante?.id_usuario === user?.id_usuario
+  const isFreelancerSelecionado = ordem?.freelancer_selecionado?.id_usuario === user?.id_usuario
+  const contratanteJaAvaliou = ordem?.avaliacoes?.some((avaliacao) => avaliacao.avaliador_tipo === 'contratante')
+  const freelancerJaAvaliou = ordem?.avaliacoes?.some((avaliacao) => avaliacao.avaliador_tipo === 'freelancer')
   const conversaAtiva = conversas.find((conversa) => conversa.id === conversaAtivaId) || null
   const podeEnviarMensagem = conversaAtiva?.status === 'ativa'
 
@@ -282,9 +364,13 @@ export default function DetalhesOrdem() {
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.label}>Contratante</span>
-                <span className={styles.value}>
+                <button
+                  type="button"
+                  className={styles.profileLink}
+                  onClick={() => abrirPerfilUsuario(ordem.contratante)}
+                >
                   {ordem.contratante?.nome} {ordem.contratante?.sobre_nome}
-                </span>
+                </button>
               </div>
               <div className={styles.infoItem}>
                 <span className={styles.label}>Status</span>
@@ -299,9 +385,13 @@ export default function DetalhesOrdem() {
               {ordem.freelancer_selecionado && (
                 <div className={styles.infoItem}>
                   <span className={styles.label}>Freelancer selecionado</span>
-                  <span className={styles.value}>
+                  <button
+                    type="button"
+                    className={styles.profileLink}
+                    onClick={() => abrirPerfilUsuario(ordem.freelancer_selecionado)}
+                  >
                     {ordem.freelancer_selecionado.nome} {ordem.freelancer_selecionado.sobre_nome}
-                  </span>
+                  </button>
                 </div>
               )}
               {ordem.imagem && (
@@ -335,7 +425,13 @@ export default function DetalhesOrdem() {
                   return (
                     <div key={candidato.id_usuario} className={styles.candidatoCard}>
                       <div className={styles.candidatoInfo}>
-                        <h4>{candidato.nome} {candidato.sobre_nome}</h4>
+                        <button
+                          type="button"
+                          className={styles.candidatoName}
+                          onClick={() => abrirPerfilUsuario(candidato)}
+                        >
+                          {candidato.nome} {candidato.sobre_nome}
+                        </button>
                         <p>{candidato.email}</p>
                         {candidato.categorias?.length > 0 && (
                           <div className={styles.candidatoCategorias}>
@@ -347,6 +443,13 @@ export default function DetalhesOrdem() {
                           </div>
                         )}
                       </div>
+                      <button
+                        type="button"
+                        className={styles.profileButton}
+                        onClick={() => abrirPerfilUsuario(candidato)}
+                      >
+                        Ver perfil
+                      </button>
                       {isContratante && ordem.status === 'aberta' && (
                         <button
                           className={styles.selectBtn}
@@ -388,27 +491,43 @@ export default function DetalhesOrdem() {
                       : 'Sua conversa ficará disponível após a candidatura.'}
                   </p>
                 ) : (
-                  conversas.map((conversa) => (
-                    <button
-                      key={conversa.id}
-                      className={`${styles.conversationButton} ${conversa.id === conversaAtivaId ? styles.conversationButtonActive : ''}`}
-                      onClick={() => setConversaAtivaId(conversa.id)}
-                    >
-                      <strong>
-                        {isContratante
-                          ? `${conversa.freelancer.nome} ${conversa.freelancer.sobre_nome}`
-                          : `${conversa.contratante.nome} ${conversa.contratante.sobre_nome}`}
-                      </strong>
-                      <span className={styles.conversationMeta}>
-                        {conversa.tipo === 'principal' ? 'Chat principal' : 'Chat de candidatura'} · {conversa.status}
-                      </span>
-                      {conversa.ultima_mensagem && (
-                        <span className={styles.conversationPreview}>
-                          {conversa.ultima_mensagem.conteudo}
+                  conversas.map((conversa) => {
+                    const participante = isContratante ? conversa.freelancer : conversa.contratante
+
+                    return (
+                      <div
+                        key={conversa.id}
+                        role="button"
+                        tabIndex={0}
+                        className={`${styles.conversationButton} ${conversa.id === conversaAtivaId ? styles.conversationButtonActive : ''}`}
+                        onClick={() => setConversaAtivaId(conversa.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            setConversaAtivaId(conversa.id)
+                          }
+                        }}
+                      >
+                        <div className={styles.conversationTop}>
+                          <strong>{participante.nome} {participante.sobre_nome}</strong>
+                          <button
+                            type="button"
+                            className={styles.conversationProfileLink}
+                            onClick={(event) => abrirPerfilUsuario(participante, event)}
+                          >
+                            Ver perfil
+                          </button>
+                        </div>
+                        <span className={styles.conversationMeta}>
+                          {conversa.tipo === 'principal' ? 'Chat principal' : 'Chat de candidatura'} · {conversa.status}
                         </span>
-                      )}
-                    </button>
-                  ))
+                        {conversa.ultima_mensagem && (
+                          <span className={styles.conversationPreview}>
+                            {conversa.ultima_mensagem.conteudo}
+                          </span>
+                        )}
+                      </div>
+                    )
+                  })
                 )}
               </aside>
 
@@ -466,6 +585,72 @@ export default function DetalhesOrdem() {
             <div className={`${styles.mensagem} ${mensagem.toLowerCase().includes('erro') || mensagem.toLowerCase().includes('não foi') ? styles.erro : styles.sucesso}`}>
               {mensagem}
             </div>
+          )}
+
+          {isContratante && ordem.status === 'em_execucao' && !contratanteJaAvaliou && (
+            <section className={styles.section}>
+              <h2>Finalizar servico</h2>
+              <form className={styles.chatForm} onSubmit={handleFinalizarServico}>
+                <label>
+                  Nota do profissional
+                  <select
+                    className={styles.chatInput}
+                    value={avaliacaoFinal.nota_freelancer}
+                    onChange={(event) => setAvaliacaoFinal((prev) => ({ ...prev, nota_freelancer: event.target.value }))}
+                  >
+                    {[0, 1, 2, 3, 4, 5].map((nota) => <option key={nota} value={nota}>{nota} estrelas</option>)}
+                  </select>
+                </label>
+                <label>
+                  Nota da plataforma
+                  <select
+                    className={styles.chatInput}
+                    value={avaliacaoFinal.nota_plataforma}
+                    onChange={(event) => setAvaliacaoFinal((prev) => ({ ...prev, nota_plataforma: event.target.value }))}
+                  >
+                    {[0, 1, 2, 3, 4, 5].map((nota) => <option key={nota} value={nota}>{nota} estrelas</option>)}
+                  </select>
+                </label>
+                <textarea
+                  className={styles.chatInput}
+                  rows={3}
+                  value={avaliacaoFinal.comentario}
+                  onChange={(event) => setAvaliacaoFinal((prev) => ({ ...prev, comentario: event.target.value }))}
+                  placeholder="Feedback do servico"
+                />
+                <button className={styles.sendBtn} type="submit" disabled={finalizando}>
+                  {finalizando ? 'Finalizando...' : 'Finalizar servico'}
+                </button>
+              </form>
+            </section>
+          )}
+
+          {isFreelancerSelecionado && ordem.status === 'finalizado' && !freelancerJaAvaliou && (
+            <section className={styles.section}>
+              <h2>Avaliar contratante</h2>
+              <form className={styles.chatForm} onSubmit={handleAvaliarContratante}>
+                <label>
+                  Nota do contratante
+                  <select
+                    className={styles.chatInput}
+                    value={avaliacaoContratante.nota_contratante}
+                    onChange={(event) => setAvaliacaoContratante((prev) => ({ ...prev, nota_contratante: event.target.value }))}
+                  >
+                    {[0, 1, 2, 3, 4, 5].map((nota) => <option key={nota} value={nota}>{nota} estrelas</option>)}
+                  </select>
+                </label>
+                <textarea
+                  className={styles.chatInput}
+                  rows={3}
+                  value={avaliacaoContratante.comentario}
+                  onChange={(event) => setAvaliacaoContratante((prev) => ({ ...prev, comentario: event.target.value }))}
+                  placeholder="Feedback sobre o contratante"
+                />
+                <button className={styles.sendBtn} type="submit" disabled={avaliandoContratante}>
+                  {avaliandoContratante ? 'Salvando...' : 'Salvar avaliacao'}
+                </button>
+              </form>
+            </section>
           )}
 
           {ordem.status === 'aberta' && user?.freelancer && !isContratante && (
