@@ -3,10 +3,6 @@ import { NextResponse } from 'next/server'
 export function proxy(request) {
   const { pathname } = request.nextUrl
 
-  if (pathname === '/') {
-    return new NextResponse('Not Found', { status: 404 })
-  }
-
   if (pathname === '/index') {
     const url = request.nextUrl.clone()
     url.pathname = '/'
@@ -17,5 +13,5 @@ export function proxy(request) {
 }
 
 export const config = {
-  matcher: ['/', '/index'],
+  matcher: ['/index'],
 }
