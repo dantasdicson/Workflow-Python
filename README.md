@@ -5,7 +5,7 @@ Sistema web para gestao de ordens de servico entre contratantes e freelancers, c
 ![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-16.2.1-000000?style=for-the-badge&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-19.2.4-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![SQLite](https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Render-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-5.3.1-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 
 ## Visao Geral
@@ -32,7 +32,8 @@ O projeto permite:
 - Simple JWT
 - django-filter
 - django-cors-headers
-- SQLite
+- PostgreSQL em producao via `DATABASE_URL`
+- SQLite local como fallback de desenvolvimento
 
 ### Frontend
 
@@ -362,6 +363,8 @@ Configuracoes principais em `backend/workflow/settings.py`:
 
 - `SECRET_KEY`
 - `DEBUG`
+- `DATABASE_URL`
+- `DATABASE_SSL_REQUIRE`
 - `ALLOWED_HOSTS`
 - `FRONTEND_BASE_URL`
 - `DEFAULT_FROM_EMAIL`

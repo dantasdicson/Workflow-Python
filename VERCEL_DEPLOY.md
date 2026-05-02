@@ -52,14 +52,10 @@ Name: workflow-python-api
 Runtime: Python
 Root Directory: backend
 Build Command: pip install -r requirements.txt
-Start Command: gunicorn workflow.wsgi:application
+Start Command: python manage.py migrate && python povoar_dados_demo.py && python -m gunicorn workflow.wsgi:application
 ```
 
-Se o servico foi criado manualmente no Render, use este Start Command para garantir que o banco SQLite receba as tabelas antes de iniciar:
-
-```text
-python manage.py migrate && python povoar_dados_demo.py && python -m gunicorn workflow.wsgi:application
-```
+Crie tambem um PostgreSQL no Render e coloque a Internal Database URL em `DATABASE_URL` no backend.
 
 Variaveis do backend:
 
@@ -67,6 +63,8 @@ Variaveis do backend:
 PYTHON_VERSION=3.12.10
 DEBUG=False
 SECRET_KEY=gere-uma-chave-grande
+DATABASE_URL=postgresql://...
+DATABASE_SSL_REQUIRE=False
 FRONTEND_BASE_URL=https://sua-url-real-do-vercel
 DEFAULT_FROM_EMAIL=no-reply@workflow.local
 EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend

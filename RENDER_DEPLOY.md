@@ -1,51 +1,56 @@
-# Deploy no Render
+# Backend no Render com PostgreSQL
 
-Este projeto tem dois servicos:
+Use o Render para o backend Django e para o banco PostgreSQL. O frontend Next.js fica no Vercel.
 
-- `workflow-python`: frontend Next.js, abre a pagina principal.
-- `workflow-python-api`: backend Django REST API.
+O arquivo `render.yaml` na raiz define:
 
-O arquivo `render.yaml` na raiz define os dois servicos para Blueprint do Render.
+- `workflow-python-api`: Web Service Python/Django.
+- `workflow-python-db`: PostgreSQL usado pelo Django.
 
-## Como aplicar
+## Aplicando pelo Blueprint
 
 1. Envie este repositorio para o GitHub.
 2. No Render, va em **Blueprints** e crie/sincronize um Blueprint apontando para este repo.
-3. Confira se o servico `workflow-python` ficou com:
-   - Runtime: Node
-   - Root Directory: `frontend`
-   - Build Command: `npm install && npm run build`
-   - Start Command: `npm run start -- -p $PORT`
+3. Confira se foi criado o banco `workflow-python-db`.
 4. Confira se o servico `workflow-python-api` ficou com:
    - Runtime: Python
    - Root Directory: `backend`
    - Build Command: `pip install -r requirements.txt`
    - Pre-Deploy Command: `python manage.py migrate`
    - Start Command: `python manage.py migrate && python povoar_dados_demo.py && python -m gunicorn workflow.wsgi:application`
+   - Environment Variable `DATABASE_URL` ligada ao banco `workflow-python-db`.
 
-## Importante sobre a URL atual
+## Se criar manualmente
 
-Para `https://workflow-python.onrender.com/` abrir a pagina do Next.js, o servico chamado `workflow-python` precisa ser o frontend.
-
-Se o servico atual `workflow-python` foi criado como Python/Django, o Render nao permite trocar o runtime desse servico existente para Node via Blueprint. Nesse caso:
-
-1. Renomeie ou remova o servico antigo no painel do Render.
-2. Sincronize o Blueprint novamente.
-3. Deixe o novo servico Node usar o nome `workflow-python`.
-
-## Variaveis
-
-Frontend:
+1. Crie um PostgreSQL no Render.
+2. Copie a **Internal Database URL** do banco.
+3. No Web Service `workflow-python-api`, adicione:
 
 ```text
-NEXT_PUBLIC_API_BASE_URL=https://workflow-python-api.onrender.com
+DATABASE_URL=postgresql://...
 ```
+
+4. Mantenha o Start Command:
+
+```text
+python manage.py migrate && python povoar_dados_demo.py && python -m gunicorn workflow.wsgi:application
+```
+
+5. Clique em **Manual Deploy > Clear build cache & deploy**.
+
+## Variaveis
 
 Backend:
 
 ```text
-FRONTEND_BASE_URL=https://workflow-python.onrender.com
+DATABASE_URL=<Internal Database URL do PostgreSQL do Render>
+DATABASE_SSL_REQUIRE=False
+FRONTEND_BASE_URL=https://workflow-python.vercel.app
 DEBUG=False
 ```
 
-Se o Render gerar outra URL para a API, atualize `NEXT_PUBLIC_API_BASE_URL` no servico frontend.
+## Observacao sobre dados
+
+Ao trocar de SQLite para PostgreSQL, os dados do arquivo `db.sqlite3` nao migram automaticamente. O comando `povoar_dados_demo.py` cria categorias, usuarios e servicos de exemplo no PostgreSQL durante o deploy.
+
+Para migrar dados reais do SQLite antigo, e necessario fazer um dump/load separado.
