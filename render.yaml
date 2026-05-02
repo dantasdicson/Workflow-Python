@@ -6,7 +6,7 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     preDeployCommand: python manage.py migrate
-    startCommand: python manage.py migrate && gunicorn workflow.wsgi:application
+    startCommand: python manage.py migrate && python inserir_categorias.py && python -m gunicorn workflow.wsgi:application
     healthCheckPath: /api/categorias/
     envVars:
       - key: PYTHON_VERSION

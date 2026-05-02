@@ -21,7 +21,7 @@ O arquivo `render.yaml` na raiz define os dois servicos para Blueprint do Render
    - Root Directory: `backend`
    - Build Command: `pip install -r requirements.txt`
    - Pre-Deploy Command: `python manage.py migrate`
-   - Start Command: `python manage.py migrate && gunicorn workflow.wsgi:application`
+   - Start Command: `python manage.py migrate && python inserir_categorias.py && python -m gunicorn workflow.wsgi:application`
 
 ## Importante sobre a URL atual
 
