@@ -1,19 +1,5 @@
 services:
   - type: web
-    runtime: node
-    name: workflow-python
-    rootDir: frontend
-    plan: free
-    buildCommand: npm install && npm run build
-    startCommand: npm run start -- -p $PORT
-    healthCheckPath: /
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: NEXT_PUBLIC_API_BASE_URL
-        value: https://workflow-python-api.onrender.com
-
-  - type: web
     runtime: python
     name: workflow-python-api
     rootDir: backend
@@ -30,7 +16,7 @@ services:
       - key: DEBUG
         value: "False"
       - key: FRONTEND_BASE_URL
-        value: https://workflow-python.onrender.com
+        value: https://workflow-python.vercel.app
       - key: DEFAULT_FROM_EMAIL
         value: no-reply@workflow.local
       - key: EMAIL_BACKEND
