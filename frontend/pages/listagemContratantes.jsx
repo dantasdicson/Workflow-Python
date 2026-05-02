@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import Navbar from '../components/Navbar'
+import { getMediaProxyUrl } from '../lib/media'
 import homeStyles from '../styles/Home.module.css'
 import styles from '../styles/ListagemContratantes.module.css'
 import { getMe } from '../lib/api'
@@ -74,7 +75,8 @@ export default function ListagemContratantes() {
             ) : (
               <div className={styles.grid}>
                 {anuncios.map((anuncio) => {
-                  const avatarUrl = anuncio.freelancer?.foto_perfil_url || anuncio.foto_avatar_url
+                  const avatarUrl = getMediaProxyUrl(anuncio.foto_avatar_url || anuncio.freelancer?.foto_perfil_url)
+                  const portfolioArquivoUrl = getMediaProxyUrl(anuncio.portfolio_arquivo_url)
                   const freelancerId = getFreelancerId(anuncio)
                   const abrirPerfil = () => {
                     if (!freelancerId) {
@@ -152,9 +154,9 @@ export default function ListagemContratantes() {
                               Ver portfolio
                             </a>
                           )}
-                          {anuncio.portfolio_arquivo_url && (
+                          {portfolioArquivoUrl && (
                             <a
-                              href={anuncio.portfolio_arquivo_url}
+                              href={portfolioArquivoUrl}
                               target="_blank"
                               rel="noreferrer"
                               className={styles.primaryButton}

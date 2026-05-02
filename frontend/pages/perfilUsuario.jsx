@@ -2,23 +2,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import Navbar from '../components/Navbar'
+import { getMediaProxyUrl } from '../lib/media'
 import homeStyles from '../styles/Home.module.css'
 import styles from '../styles/PerfilUsuario.module.css'
-
-function getMediaProxyUrl(url) {
-  if (!url) return null
-
-  try {
-    const parsedUrl = new URL(url, window.location.origin)
-    if (parsedUrl.pathname.startsWith('/media/')) {
-      return `/media-proxy/${parsedUrl.pathname.slice('/media/'.length)}${parsedUrl.search}`
-    }
-  } catch (e) {
-    // Mantem a URL original se ela nao puder ser interpretada.
-  }
-
-  return url
-}
 
 export default function PerfilUsuario() {
   const router = useRouter()

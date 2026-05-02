@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
 import Navbar from '../components/Navbar'
+import { getMediaProxyUrl } from '../lib/media'
 import homeStyles from '../styles/Home.module.css'
 import styles from '../styles/AnuncioServico.module.css'
 
@@ -36,6 +37,9 @@ export default function AnuncioServico() {
   const [success, setSuccess] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
 
+  const avatarPreviewUrl = getMediaProxyUrl(avatarPreview || anuncioAtual?.foto_avatar_url)
+  const portfolioArquivoUrl = getMediaProxyUrl(anuncioAtual?.portfolio_arquivo_url)
+
   useEffect(() => {
     const loadPage = async () => {
       try {
@@ -68,7 +72,7 @@ export default function AnuncioServico() {
             portfolio_url: anuncioData.portfolio_url || '',
             portfolio_arquivo: null,
           })
-          setAvatarPreview(anuncioData.foto_avatar_url || null)
+          setAvatarPreview(getMediaProxyUrl(anuncioData.foto_avatar_url))
         } else if (anuncioRes.status !== 404) {
           const anuncioError = await anuncioRes.json().catch(() => ({}))
           throw new Error(getApiErrorMessage(anuncioError) || 'Erro ao carregar anuncio atual.')
@@ -152,7 +156,7 @@ export default function AnuncioServico() {
         portfolio_arquivo: null,
         categorias_ids: Array.isArray(data.categorias) ? data.categorias.map((item) => item.id) : prev.categorias_ids,
       }))
-      setAvatarPreview(data.foto_avatar_url || null)
+      setAvatarPreview(getMediaProxyUrl(data.foto_avatar_url))
       setSuccess(anuncioAtual ? 'Anuncio atualizado com sucesso.' : 'Anuncio publicado com sucesso.')
     } catch (err) {
       setError(err.message)
@@ -277,10 +281,10 @@ export default function AnuncioServico() {
                     />
                   </label>
 
-                  {(avatarPreview || anuncioAtual?.foto_avatar_url) && (
+                  {avatarPreviewUrl && (
                     <div className={styles.avatarCurrent}>
                       <img
-                        src={avatarPreview || anuncioAtual?.foto_avatar_url}
+                        src={avatarPreviewUrl}
                         alt="Avatar da divulgacao"
                         className={styles.avatarThumb}
                       />
@@ -307,10 +311,10 @@ export default function AnuncioServico() {
                     />
                   </label>
 
-                  {anuncioAtual?.portfolio_arquivo_url && (
+                  {portfolioArquivoUrl && (
                     <p className={styles.fileInfo}>
                       Arquivo atual:{' '}
-                      <a href={anuncioAtual.portfolio_arquivo_url} target="_blank" rel="noreferrer">
+                      <a href={portfolioArquivoUrl} target="_blank" rel="noreferrer">
                         abrir portfolio enviado
                       </a>
                     </p>
@@ -334,9 +338,9 @@ export default function AnuncioServico() {
                 <p className={styles.kicker}>Preview</p>
                 <div className={styles.previewHeader}>
                   <div className={styles.previewAvatarWrap}>
-                    {avatarPreview || anuncioAtual?.foto_avatar_url ? (
+                    {avatarPreviewUrl ? (
                       <img
-                        src={avatarPreview || anuncioAtual?.foto_avatar_url}
+                        src={avatarPreviewUrl}
                         alt="Avatar do anuncio"
                         className={styles.previewAvatar}
                       />
