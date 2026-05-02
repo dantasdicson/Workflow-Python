@@ -5,7 +5,6 @@ services:
     rootDir: backend
     plan: free
     buildCommand: pip install -r requirements.txt
-    preDeployCommand: python manage.py migrate
     startCommand: python manage.py migrate && python povoar_dados_demo.py && python -m gunicorn workflow.wsgi:application
     healthCheckPath: /api/categorias/
     envVars:
