@@ -1,11 +1,10 @@
 import { parseCookies, serializeCookie, setCookie } from './_cookie'
 import formidable from 'formidable'
+import { readFile } from 'node:fs/promises'
 
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
+    bodyParser: false,
   },
 }
 
@@ -34,6 +33,8 @@ async function callUpstream(req, access, payload) {
     if (!(payload instanceof FormData)) {
       headers['Content-Type'] = 'application/json'
       body = JSON.stringify(payload)
+    } else {
+      body = payload
     }
   } else {
     headers['Content-Type'] = 'application/json'
@@ -66,6 +67,16 @@ async function getCurrentUser(access) {
   return res.json()
 }
 
+async function readJsonBody(req) {
+  const chunks = []
+  for await (const chunk of req) {
+    chunks.push(chunk)
+  }
+
+  const rawBody = Buffer.concat(chunks).toString('utf8')
+  return rawBody ? JSON.parse(rawBody) : {}
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.setHeader('Allow', ['GET', 'POST'])
@@ -85,12 +96,13 @@ export default async function handler(req, res) {
     try {
       // Temporariamente: tentar parse JSON primeiro
       if (req.headers['content-type']?.includes('application/json')) {
+        const body = await readJsonBody(req)
         const currentUser = await getCurrentUser(access)
         if (!currentUser) {
           return res.status(401).json({ detail: 'Not authenticated' })
         }
         payload = {
-          ...req.body,
+          ...body,
           contratante_id: currentUser.id_usuario
         }
         console.log('JSON payload:', payload)
@@ -121,7 +133,10 @@ export default async function handler(req, res) {
 
         // Adiciona arquivo, se existir
         if (files.imagem && files.imagem.length > 0) {
-          formData.append('imagem', files.imagem[0])
+          const file = files.imagem[0]
+          const bytes = await readFile(file.filepath)
+          const blob = new Blob([bytes], { type: file.mimetype || 'application/octet-stream' })
+          formData.append('imagem', blob, file.originalFilename || 'upload')
         }
 
         payload = formData

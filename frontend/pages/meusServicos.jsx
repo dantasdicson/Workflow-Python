@@ -131,7 +131,7 @@ export default function MeusServicos() {
 
     try {
       setDeleting(true)
-      const response = await apiFetch(`http://127.0.0.1:8000/api/ordens/${ordemId}/`, {
+      const response = await apiFetch(`/api/ordens-proxy?path=${encodeURIComponent(`${ordemId}/`)}`, {
         method: 'DELETE',
       })
 

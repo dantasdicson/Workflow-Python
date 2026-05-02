@@ -1,22 +1,24 @@
 /** @type {import('next').NextConfig} */
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000';
+
 const nextConfig = {
   async rewrites() {
     return [
       {
         source: '/media-proxy/:path*',
-        destination: 'http://127.0.0.1:8000/media/:path*',
+        destination: `${apiBaseUrl}/media/:path*`,
       },
       {
         source: '/api/usuarios/:id/perfil-publico',
-        destination: 'http://127.0.0.1:8000/api/usuarios/:id/perfil-publico/',
+        destination: `${apiBaseUrl}/api/usuarios/:id/perfil-publico/`,
       },
       {
         source: '/api/:path*/',
-        destination: 'http://127.0.0.1:8000/api/:path*/',
+        destination: `${apiBaseUrl}/api/:path*/`,
       },
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:8000/api/:path*',
+        destination: `${apiBaseUrl}/api/:path*`,
       },
     ]
   },

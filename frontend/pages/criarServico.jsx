@@ -59,7 +59,7 @@ export default function CriarServico() {
   const carregarCategorias = async () => {
     try {
       setCategoriasLoading(true)
-      const response = await fetch('http://127.0.0.1:8000/api/categorias/', {
+      const response = await fetch('/api/categorias', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +187,7 @@ export default function CriarServico() {
       })
       
       console.log('=== DEBUG REQUISIÇÃO ===')
-      console.log('URL: http://127.0.0.1:8000/api/ordens/')
+      console.log('URL: /api/ordens')
       console.log('Método: POST')
       console.log('FormData entries:')
       for (let [key, value] of formData.entries()) {
@@ -221,12 +221,11 @@ export default function CriarServico() {
       }
       // NÃO definir Content-Type para FormData - deixar o navegador definir automaticamente
       
-      const response = await fetch('http://127.0.0.1:8000/api/ordens/', {
+      const response = await fetch('/api/ordens', {
         method: 'POST',
         body: formData,
         headers: headers,
-        mode: 'cors',
-        credentials: 'include'
+        credentials: 'same-origin'
       })
       
       if (!response.ok) {

@@ -22,10 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2$!e=*@ek+@o#@wa@f*n@z_yq%&_=1fetw(w_vmoh0$lo(&yjj'
+SECRET_KEY = config(
+    'SECRET_KEY',
+    default='django-insecure-2$!e=*@ek+@o#@wa@f*n@z_yq%&_=1fetw(w_vmoh0$lo(&yjj',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = ['*']
 
@@ -185,7 +188,7 @@ SIMPLE_JWT = {
     'AUTH_COOKIE': 'wf_access',
     'REFRESH_COOKIE': 'wf_refresh',
     'AUTH_COOKIE_DOMAIN': None,
-    'AUTH_COOKIE_SECURE': False,
+    'AUTH_COOKIE_SECURE': not DEBUG,
     'AUTH_COOKIE_HTTP_ONLY': True,
     'AUTH_COOKIE_PATH': '/',
     'AUTH_COOKIE_SAMESITE': 'Lax',
