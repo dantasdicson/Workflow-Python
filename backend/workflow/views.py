@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.conf import settings
+from django.shortcuts import redirect
 
 def home(request):
-    return render(request, 'index.html')
+    return redirect(getattr(settings, 'FRONTEND_BASE_URL', 'http://localhost:3000'))
