@@ -110,6 +110,11 @@ export default function MeuPainel() {
 
   const handleChange = (field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value
+    if (field === 'freelancer') {
+      setEditing(true)
+      setSuccess(null)
+      setError(null)
+    }
     setForm((prev) => {
       const next = { ...prev, [field]: value }
       if (field === 'freelancer' && !value) {
@@ -302,7 +307,7 @@ export default function MeuPainel() {
                     type="checkbox"
                     checked={form.freelancer}
                     onChange={handleChange('freelancer')}
-                    disabled={!editing || saving}
+                    disabled={saving}
                   />
                   Atuar como freelancer na plataforma
                 </label>
@@ -335,7 +340,7 @@ export default function MeuPainel() {
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleCategoria(categoria.id)}
-                            disabled={!editing || saving}
+                            disabled={saving}
                           />
                           <span>{categoria.nome}</span>
                         </label>
