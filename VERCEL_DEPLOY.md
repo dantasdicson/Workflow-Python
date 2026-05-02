@@ -55,6 +55,12 @@ Build Command: pip install -r requirements.txt
 Start Command: gunicorn workflow.wsgi:application
 ```
 
+Se o servico foi criado manualmente no Render, use este Start Command para garantir que o banco SQLite receba as tabelas antes de iniciar:
+
+```text
+python manage.py migrate && gunicorn workflow.wsgi:application
+```
+
 Variaveis do backend:
 
 ```text
