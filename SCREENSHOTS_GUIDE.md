@@ -18,7 +18,7 @@ Capturar as telas mais importantes do sistema Workflow para divulgação profiss
 ## 📋 **LISTA DE SCREENSHOTS ESSENCIAIS**
 
 ### 🏠 **1. Página Inicial (Home)**
-- **URL**: http://localhost:3000/
+- **URL**: https://workflow-python.onrender.com
 - **O que mostrar**: 
   - Design limpo e profissional
   - Navegação intuitiva
